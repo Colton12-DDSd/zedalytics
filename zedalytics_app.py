@@ -159,28 +159,55 @@ def main():
                         show_horse_dashboard(horse_df)
 
     with tab3:
-        st.subheader("⚙️ Top 5 Augment Combinations")
-        df['augment_combo'] = (
-            df['cpu_augment'].fillna('') + ' | ' +
-            df['ram_augment'].fillna('') + ' | ' +
-            df['hydraulic_augment'].fillna('')
+        st.subheader("⚙️ Augment Analytics")
+    
+        # --- Select bloodline ---
+        bloodlines = ["All"] + sorted(df['bloodline'].dropna().unique())
+        selected_bloodline = st.selectbox("Select Bloodline:", options=bloodlines)
+    
+        # --- Filter by bloodline ---
+        if selected_bloodline != "All":
+            filtered_df = df[df['bloodline'] == selected_bloodline].copy()
+        else:
+            filtered_df = df.copy()
+    
+        # --- Prepare augment combo column ---
+        filtered_df['augment_combo'] = (
+            filtered_df['cpu_augment'].fillna('') + ' | ' +
+            filtered_df['ram_augment'].fillna('') + ' | ' +
+            filtered_df['hydraulic_augment'].fillna('')
         )
-        augments = df.groupby('augment_combo').agg({
+    
+        # --- Top 5 augment combos ---
+        st.subheader(f"🔝 Top 5 Augment Combinations ({selected_bloodline})")
+        augments = filtered_df.groupby('augment_combo').agg({
             'finish_position': ['count', lambda x: (x == 1).mean() * 100]
         }).rename(columns={'count': 'Races', '<lambda_0>': 'Win %'})
         augments.columns = augments.columns.droplevel(0)
         augments = augments.sort_values('Races', ascending=False).head(5)
         st.dataframe(augments.style.format({'Win %': '{:.2f}'}))
-
-        st.subheader("🔧 Customize Augment Combo")
+    
+        # --- Custom augment combo testing ---
+        st.subheader("🔧 Test a Custom Augment Combo")
+    
         cpu_options = sorted(df['cpu_augment'].dropna().unique())
         ram_options = sorted(df['ram_augment'].dropna().unique())
         hyd_options = sorted(df['hydraulic_augment'].dropna().unique())
-
+    
         cpu = st.selectbox("CPU Augment:", options=[""] + cpu_options, key="cpu")
         ram = st.selectbox("RAM Augment:", options=[""] + ram_options, key="ram")
         hyd = st.selectbox("Hydraulic Augment:", options=[""] + hyd_options, key="hyd")
+    
         custom_combo = f"{cpu} | {ram} | {hyd}"
+        if custom_combo.strip(" |"):
+            match = filtered_df[filtered_df['augment_combo'] == custom_combo]
+            if not match.empty:
+                total = len(match)
+                win_rate = (match['finish_position'] == 1).mean() * 100
+                st.success(f"{custom_combo} — {total} races, Win Rate in {selected_bloodline}: {win_rate:.2f}%")
+            else:
+                st.warning("No races found with that augment combo for this bloodline.")
+    
 
         if custom_combo.strip(" |"):
             filtered = df[df['augment_combo'] == custom_combo]
