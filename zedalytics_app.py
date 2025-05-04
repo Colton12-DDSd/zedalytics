@@ -86,9 +86,33 @@ def main():
     st.subheader("Horse Performance Dashboard for ZED Champions")
 
     df = load_data()
-    mode = st.radio("Select search mode:", ["Horse ID/Name", "Stable Name"])
+    mode = st.radio("Select search mode:", ["Homepage", "Horse ID/Name", "Stable Name"])
 
-    if mode == "Horse ID/Name":
+    if mode == "Homepage":
+        st.subheader("🏆 Top Horses by Current Balance")
+        balance_df = df.groupby(['horse_id', 'horse_name'], as_index=False)['profit_loss'].sum()
+        top_balance = balance_df.sort_values('profit_loss', ascending=False).head(10)
+
+        for _, row in top_balance.iterrows():
+            with st.container():
+                st.markdown(f"**{row['horse_name']}** — Balance: {int(row['profit_loss']):,} ZED")
+                if st.button("View Stats", key="bal" + row['horse_id']):
+                    horse_df = df[df['horse_id'] == row['horse_id']].sort_values('race_date')
+                    show_horse_dashboard(horse_df)
+
+        st.subheader("🔥 Hottest Horses (Last 5 Races)")
+        recent_df = df.sort_values('race_date').groupby('horse_id').tail(5)
+        recent_gain = recent_df.groupby(['horse_id', 'horse_name'], as_index=False)['profit_loss'].sum()
+        top_recent = recent_gain.sort_values('profit_loss', ascending=False).head(10)
+
+        for _, row in top_recent.iterrows():
+            with st.container():
+                st.markdown(f"**{row['horse_name']}** — Last 5 P/L: {int(row['profit_loss']):,} ZED")
+                if st.button("View Stats", key="hot" + row['horse_id']):
+                    horse_df = df[df['horse_id'] == row['horse_id']].sort_values('race_date')
+                    show_horse_dashboard(horse_df)
+
+    elif mode == "Horse ID/Name":
         user_input = st.text_input("Enter Horse ID or Name:")
 
         if user_input:
