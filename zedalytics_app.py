@@ -47,13 +47,13 @@ def show_horse_dashboard(horse_df):
         st.pyplot(fig1)
 
     with col2:
-        st.markdown("**Finish Position Over Time**")
+        st.markdown("**Finish Time Over Race Count**")
         fig2, ax2 = plt.subplots(figsize=(5, 3))
-        ax2.plot(horse_df['race_date'], horse_df['finish_position'], marker='o')
-        ax2.set_ylabel("Finish (1 = Win)")
-        ax2.set_xlabel("Date")
-        ax2.invert_yaxis()
+        ax2.plot(range(1, len(horse_df) + 1), horse_df['finish_time'], marker='o')
+        ax2.set_ylabel("Finish Time")
+        ax2.set_xlabel("Race Number")
         st.pyplot(fig2)
+
 
     # Space between rows
     st.markdown("###")
