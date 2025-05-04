@@ -79,16 +79,6 @@ def show_horse_dashboard(horse_df):
             ax4.set_xlabel("Date")
             st.pyplot(fig4)
 
-
-    if 'points_change' in horse_df.columns:
-        horse_df.loc[:, 'cumulative_points'] = horse_df['points_change'].cumsum()
-        st.subheader("Cumulative Points Change")
-        fig4, ax4 = plt.subplots(figsize=(6, 3))
-        ax4.plot(horse_df['race_date'], horse_df['cumulative_points'], marker='o', color='purple')
-        ax4.set_ylabel("MMR Points")
-        ax4.set_xlabel("Date")
-        st.pyplot(fig4)
-
     st.subheader("Top Augment Combinations")
     horse_df.loc[:, 'augment_combo'] = (
         horse_df['cpu_augment'].fillna('') + ' | ' +
