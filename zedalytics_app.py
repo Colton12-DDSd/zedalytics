@@ -159,8 +159,37 @@ def main():
                         show_horse_dashboard(horse_df)
 
     with tab3:
-        # unchanged
-        pass
+        st.subheader("⚙️ Top 5 Augment Combinations")
+        df['augment_combo'] = (
+            df['cpu_augment'].fillna('') + ' | ' +
+            df['ram_augment'].fillna('') + ' | ' +
+            df['hydraulic_augment'].fillna('')
+        )
+        augments = df.groupby('augment_combo').agg({
+            'finish_position': ['count', lambda x: (x == 1).mean() * 100]
+        }).rename(columns={'count': 'Races', '<lambda_0>': 'Win %'})
+        augments.columns = augments.columns.droplevel(0)
+        augments = augments.sort_values('Races', ascending=False).head(5)
+        st.dataframe(augments.style.format({'Win %': '{:.2f}'}))
+
+        st.subheader("🔧 Customize Augment Combo")
+        cpu_options = sorted(df['cpu_augment'].dropna().unique())
+        ram_options = sorted(df['ram_augment'].dropna().unique())
+        hyd_options = sorted(df['hydraulic_augment'].dropna().unique())
+
+        cpu = st.selectbox("CPU Augment:", options=[""] + cpu_options, key="cpu")
+        ram = st.selectbox("RAM Augment:", options=[""] + ram_options, key="ram")
+        hyd = st.selectbox("Hydraulic Augment:", options=[""] + hyd_options, key="hyd")
+        custom_combo = f"{cpu} | {ram} | {hyd}"
+
+        if custom_combo.strip(" |"):
+            filtered = df[df['augment_combo'] == custom_combo]
+            if not filtered.empty:
+                total = len(filtered)
+                win_rate = (filtered['finish_position'] == 1).mean() * 100
+                st.success(f"{custom_combo} — {total} races, Win Rate: {win_rate:.2f}%")
+            else:
+                st.warning("No races found with that augment combo.")
 
 if __name__ == "__main__":
     main()
