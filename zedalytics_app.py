@@ -20,7 +20,6 @@ def show_horse_dashboard(horse_df):
     total_races = len(horse_df)
     win_pct = (horse_df['finish_position'] == 1).mean() * 100
     top3_pct = (horse_df['finish_position'] <= 3).mean() * 100
-    avg_finish = horse_df['finish_position'].mean()
     total_earnings = horse_df['earnings'].sum()
     total_profit = horse_df['profit_loss'].sum()
 
@@ -36,14 +35,14 @@ def show_horse_dashboard(horse_df):
     col5.metric("Profit / Loss", f"{int(total_profit):,} ZED")
 
     st.subheader("Finish Position Distribution")
-    fig1, ax1 = plt.subplots()
+    fig1, ax1 = plt.subplots(figsize=(6, 3))
     horse_df['finish_position'].value_counts().sort_index().plot(kind='bar', ax=ax1, color='skyblue')
     ax1.set_xlabel("Finish Position")
     ax1.set_ylabel("Number of Races")
     st.pyplot(fig1)
 
     st.subheader("Finish Position Over Time")
-    fig2, ax2 = plt.subplots()
+    fig2, ax2 = plt.subplots(figsize=(6, 3))
     ax2.plot(horse_df['race_date'], horse_df['finish_position'], marker='o')
     ax2.set_ylabel("Finish (1 = Win)")
     ax2.set_xlabel("Date")
@@ -52,7 +51,7 @@ def show_horse_dashboard(horse_df):
 
     st.subheader("Cumulative Earnings")
     horse_df.loc[:, 'cumulative_earnings'] = horse_df['earnings'].cumsum()
-    fig3, ax3 = plt.subplots()
+    fig3, ax3 = plt.subplots(figsize=(6, 3))
     ax3.plot(horse_df['race_date'], horse_df['cumulative_earnings'], marker='o', color='green')
     ax3.set_ylabel("ZED")
     ax3.set_xlabel("Date")
@@ -61,7 +60,7 @@ def show_horse_dashboard(horse_df):
     if 'points_change' in horse_df.columns:
         horse_df.loc[:, 'cumulative_points'] = horse_df['points_change'].cumsum()
         st.subheader("Cumulative Points Change")
-        fig4, ax4 = plt.subplots()
+        fig4, ax4 = plt.subplots(figsize=(6, 3))
         ax4.plot(horse_df['race_date'], horse_df['cumulative_points'], marker='o', color='purple')
         ax4.set_ylabel("MMR Points")
         ax4.set_xlabel("Date")
@@ -79,6 +78,14 @@ def show_horse_dashboard(horse_df):
     augment_group.columns = augment_group.columns.droplevel(0)
     augment_group = augment_group.sort_values('Races', ascending=False).head(5)
     st.dataframe(augment_group.style.format({'Win %': '{:.2f}'}))
+
+    # ➕ New "View on ZED Champions" button
+    st.markdown("---")
+    horse_id = horse_df['horse_id'].iloc[0]
+    zedchampions_url = f"https://app.zedchampions.com/horse/{horse_id}"
+    if st.button("🔗 View on ZED Champions"):
+        st.markdown(f"[Open Horse Page ➜]({zedchampions_url})", unsafe_allow_html=True)
+
 
 def main():
     st.set_page_config(page_title="Zedalytics", layout="wide")
