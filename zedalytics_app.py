@@ -95,8 +95,15 @@ def show_horse_dashboard(horse_df):
     st.markdown("---")
     horse_id = horse_df['horse_id'].iloc[0]
     zedchampions_url = f"https://app.zedchampions.com/horse/{horse_id}"
-    if st.button("🔗 View on ZED Champions"):
-        st.markdown(f"[Open Horse Page ➜]({zedchampions_url})", unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <a href="{zedchampions_url}" target="_blank">
+            <button style="margin-top: 10px; padding: 0.5em 1em; font-size: 16px;">🔗 View on ZED Champions</button>
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 def main():
     st.set_page_config(page_title="Zedalytics", layout="wide")
