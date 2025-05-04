@@ -22,6 +22,7 @@ def show_horse_dashboard(horse_df):
     top3_pct = (horse_df['finish_position'] <= 3).mean() * 100
     total_earnings = horse_df['earnings'].sum()
     total_profit = horse_df['profit_loss'].sum()
+    race_nums = range(1, total_races + 1)
 
     st.markdown(f"### Performance Summary for `{name}`")
     st.text(f"Stable: {stable_name}")
@@ -49,11 +50,10 @@ def show_horse_dashboard(horse_df):
     with col2:
         st.markdown("**Finish Time Over Race Count**")
         fig2, ax2 = plt.subplots(figsize=(5, 3))
-        ax2.plot(range(1, len(horse_df) + 1), horse_df['finish_time'], marker='o')
+        ax2.plot(race_nums, horse_df['finish_time'], marker='o')
         ax2.set_ylabel("Finish Time")
         ax2.set_xlabel("Race Number")
         st.pyplot(fig2)
-
 
     # Space between rows
     st.markdown("###")
@@ -62,25 +62,25 @@ def show_horse_dashboard(horse_df):
     col3, col4 = st.columns(2)
     with col3:
         st.markdown("**Cumulative Earnings**")
-        horse_df.loc[:, 'cumulative_earnings'] = horse_df['earnings'].cumsum()
+        horse_df['cumulative_earnings'] = horse_df['earnings'].cumsum()
         fig3, ax3 = plt.subplots(figsize=(5, 3))
-        ax3.plot(horse_df['race_date'], horse_df['cumulative_earnings'], marker='o', color='green')
+        ax3.plot(race_nums, horse_df['cumulative_earnings'], marker='o', color='green')
         ax3.set_ylabel("ZED")
-        ax3.set_xlabel("Date")
+        ax3.set_xlabel("Race Number")
         st.pyplot(fig3)
 
     with col4:
         if 'points_change' in horse_df.columns:
             st.markdown("**Cumulative Points Change**")
-            horse_df.loc[:, 'cumulative_points'] = horse_df['points_change'].cumsum()
+            horse_df['cumulative_points'] = horse_df['points_change'].cumsum()
             fig4, ax4 = plt.subplots(figsize=(5, 3))
-            ax4.plot(horse_df['race_date'], horse_df['cumulative_points'], marker='o', color='purple')
+            ax4.plot(race_nums, horse_df['cumulative_points'], marker='o', color='purple')
             ax4.set_ylabel("MMR Points")
-            ax4.set_xlabel("Date")
+            ax4.set_xlabel("Race Number")
             st.pyplot(fig4)
 
     st.subheader("Top Augment Combinations")
-    horse_df.loc[:, 'augment_combo'] = (
+    horse_df['augment_combo'] = (
         horse_df['cpu_augment'].fillna('') + ' | ' +
         horse_df['ram_augment'].fillna('') + ' | ' +
         horse_df['hydraulic_augment'].fillna('')
@@ -92,13 +92,11 @@ def show_horse_dashboard(horse_df):
     augment_group = augment_group.sort_values('Races', ascending=False).head(5)
     st.dataframe(augment_group.style.format({'Win %': '{:.2f}'}))
 
-    # ➕ New "View on ZED Champions" button
     st.markdown("---")
     horse_id = horse_df['horse_id'].iloc[0]
     zedchampions_url = f"https://app.zedchampions.com/horse/{horse_id}"
     if st.button("🔗 View on ZED Champions"):
         st.markdown(f"[Open Horse Page ➜]({zedchampions_url})", unsafe_allow_html=True)
-
 
 def main():
     st.set_page_config(page_title="Zedalytics", layout="wide")
