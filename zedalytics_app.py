@@ -83,15 +83,14 @@ def show_horse_dashboard(horse_df):
 def main():
     st.set_page_config(page_title="Zedalytics", layout="wide")
     st.title("Zedalytics")
-    st.subheader("Horse Performance Dashboard for ZED Champions")
-
     df = load_data()
-    mode = st.radio("Select search mode:", ["Homepage", "Horse ID/Name", "Stable Name"])
 
-    if mode == "Homepage":
+    tab1, tab2, tab3 = st.tabs(["🏇 Horses", "🏠 Stables", "⚙️ Augments"])
+
+    with tab1:
         st.subheader("🏆 Top Horses by Current Balance")
         balance_df = df.groupby(['horse_id', 'horse_name'], as_index=False)['profit_loss'].sum()
-        top_balance = balance_df.sort_values('profit_loss', ascending=False).head(10)
+        top_balance = balance_df.sort_values('profit_loss', ascending=False).head(5)
 
         for _, row in top_balance.iterrows():
             with st.container():
@@ -100,21 +99,8 @@ def main():
                     horse_df = df[df['horse_id'] == row['horse_id']].sort_values('race_date')
                     show_horse_dashboard(horse_df)
 
-        st.subheader("🔥 Hottest Horses (Last 5 Races)")
-        recent_df = df.sort_values('race_date').groupby('horse_id').tail(5)
-        recent_gain = recent_df.groupby(['horse_id', 'horse_name'], as_index=False)['profit_loss'].sum()
-        top_recent = recent_gain.sort_values('profit_loss', ascending=False).head(10)
-
-        for _, row in top_recent.iterrows():
-            with st.container():
-                st.markdown(f"**{row['horse_name']}** — Last 5 P/L: {int(row['profit_loss']):,} ZED")
-                if st.button("View Stats", key="hot" + row['horse_id']):
-                    horse_df = df[df['horse_id'] == row['horse_id']].sort_values('race_date')
-                    show_horse_dashboard(horse_df)
-
-    elif mode == "Horse ID/Name":
-        user_input = st.text_input("Enter Horse ID or Name:")
-
+        st.subheader("🔎 Search Horse by ID or Name")
+        user_input = st.text_input("Enter Horse ID or Name:", key="horse_search")
         if user_input:
             user_input = user_input.strip()
             if len(user_input) == 36:
@@ -133,61 +119,57 @@ def main():
 
             show_horse_dashboard(horse_df)
 
-    elif mode == "Stable Name":
-        stable_input = st.text_input("Enter Stable Name:")
+    with tab2:
+        st.subheader("🏠 Top Earning Stables")
+        stable_df = df.groupby('stable_name', as_index=False)['earnings'].sum()
+        top_stables = stable_df.sort_values('earnings', ascending=False).head(5)
+        st.dataframe(top_stables)
 
+        stable_input = st.text_input("Enter Stable Name:", key="stable_search")
         if stable_input:
             filtered = df[df['stable_name'].str.lower() == stable_input.strip().lower()]
             if filtered.empty:
                 st.warning("No horses found for this stable.")
                 return
 
-            sort_option = st.selectbox("Sort horses by:", ["Races", "Win %", "Earnings", "Balance", "Profit"], index=0)
-
             horses = filtered[['horse_name', 'horse_id']].drop_duplicates()
-
-            sort_stats = []
             for _, row in horses.iterrows():
-                horse_df = filtered[filtered['horse_id'] == row['horse_id']]
-                total_races = len(horse_df)
-                win_pct = (horse_df['finish_position'] == 1).mean() * 100
-                earnings = horse_df['earnings'].sum()
-                balance = horse_df['profit_loss'].sum()
-                profit = balance - (2 * 1000)  # Assume 1000 starting balance
-                sort_stats.append({
-                    'horse_name': row['horse_name'],
-                    'horse_id': row['horse_id'],
-                    'total_races': total_races,
-                    'win_pct': win_pct,
-                    'earnings': earnings,
-                    'balance': balance,
-                    'profit': profit
-                })
-            sort_df = pd.DataFrame(sort_stats)
-
-            if sort_option == "Races":
-                sort_df = sort_df.sort_values("total_races", ascending=False)
-            elif sort_option == "Win %":
-                sort_df = sort_df.sort_values("win_pct", ascending=False)
-            elif sort_option == "Earnings":
-                sort_df = sort_df.sort_values("earnings", ascending=False)
-            elif sort_option == "Balance":
-                sort_df = sort_df.sort_values("balance", ascending=False)
-            elif sort_option == "Profit":
-                sort_df = sort_df.sort_values("profit", ascending=False)
-
-            st.markdown("### Horses in Stable")
-            for _, row in sort_df.iterrows():
                 horse_df = filtered[filtered['horse_id'] == row['horse_id']].copy()
                 with st.container():
-                    cols = st.columns([2, 1])
-                    with cols[0]:
-                        st.markdown(f"**{row['horse_name']}**")
-                        st.markdown(f"Races: {row['total_races']} | Win %: {row['win_pct']:.2f}%")
-                        st.markdown(f"Earnings: {int(row['earnings']):,} ZED | Balance: {int(row['balance']):,} ZED | Profit: {int(row['profit']):,} ZED")
-                    with cols[1]:
-                        if st.button("View Stats", key=row['horse_id']):
-                            show_horse_dashboard(horse_df)
+                    st.markdown(f"**{row['horse_name']}**")
+                    st.markdown(f"Races: {len(horse_df)} | Win %: {(horse_df['finish_position'] == 1).mean() * 100:.2f}%")
+                    st.markdown(f"Earnings: {int(horse_df['earnings'].sum()):,} ZED")
+                    if st.button("View Stats", key=row['horse_id']):
+                        show_horse_dashboard(horse_df)
+
+    with tab3:
+        st.subheader("⚙️ Top 5 Augment Combinations")
+        df['augment_combo'] = (
+            df['cpu_augment'].fillna('') + ' | ' +
+            df['ram_augment'].fillna('') + ' | ' +
+            df['hydraulic_augment'].fillna('')
+        )
+        augments = df.groupby('augment_combo').agg({
+            'finish_position': ['count', lambda x: (x == 1).mean() * 100]
+        }).rename(columns={'count': 'Races', '<lambda_0>': 'Win %'})
+        augments.columns = augments.columns.droplevel(0)
+        augments = augments.sort_values('Races', ascending=False).head(5)
+        st.dataframe(augments.style.format({'Win %': '{:.2f}'}))
+
+        st.subheader("🔧 Customize Augment Combo")
+        cpu = st.text_input("CPU Augment:", key="cpu")
+        ram = st.text_input("RAM Augment:", key="ram")
+        hyd = st.text_input("Hydraulic Augment:", key="hyd")
+        custom_combo = f"{cpu} | {ram} | {hyd}"
+
+        if custom_combo.strip(" |"):
+            filtered = df[df['augment_combo'] == custom_combo]
+            if not filtered.empty:
+                total = len(filtered)
+                win_rate = (filtered['finish_position'] == 1).mean() * 100
+                st.success(f"{custom_combo} — {total} races, Win Rate: {win_rate:.2f}%")
+            else:
+                st.warning("No races found with that augment combo.")
 
 if __name__ == "__main__":
     main()
