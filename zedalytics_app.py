@@ -84,6 +84,12 @@ def main():
     st.set_page_config(page_title="Zedalytics", layout="wide")
     st.title("Zedalytics")
     df = load_data()
+    df['augment_combo'] = (
+    df['cpu_augment'].fillna('') + ' | ' +
+    df['ram_augment'].fillna('') + ' | ' +
+    df['hydraulic_augment'].fillna('')
+)
+
 
     tab1, tab2, tab3 = st.tabs(["🏇 Horses", "🏠 Stables", "⚙️ Augments"])
 
