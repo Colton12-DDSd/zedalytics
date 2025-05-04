@@ -219,17 +219,5 @@ def main():
             else:
                 st.warning("No races found with that augment combo for this bloodline.")
 
-
-    
-
-        if custom_combo.strip(" |"):
-            filtered = df[df['augment_combo'] == custom_combo]
-            if not filtered.empty:
-                total = len(filtered)
-                win_rate = (filtered['finish_position'] == 1).mean() * 100
-                st.success(f"{custom_combo} — {total} races, Win Rate: {win_rate:.2f}%")
-            else:
-                st.warning("No races found with that augment combo.")
-
 if __name__ == "__main__":
     main()
