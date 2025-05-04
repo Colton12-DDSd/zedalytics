@@ -178,15 +178,19 @@ def main():
             filtered_df['hydraulic_augment'].fillna('')
         )
     
-        # --- Top 5 by Win Rate (minimum 5 races to avoid noise) ---
-        st.subheader(f"🏆 Top 5 Augment Combos by Win Rate ({selected_bloodline})")
+        # --- Top combos by Win Rate (Min 100 Races) ---
+        st.subheader(f"🏆 Top 5 Augment Combos by Win Rate ({selected_bloodline}) — *Min. 100 races*")
+    
         augments = filtered_df.groupby('augment_combo').agg(
             Races=('finish_position', 'count'),
             Wins=('finish_position', lambda x: (x == 1).sum()),
             WinRate=('finish_position', lambda x: (x == 1).mean() * 100)
-        ).query("Races >= 5").sort_values('WinRate', ascending=False).head(5)
+        ).query("Races >= 100").sort_values('WinRate', ascending=False).head(5)
     
-        st.dataframe(augments.style.format({'WinRate': '{:.2f}'}))
+        if not augments.empty:
+            st.dataframe(augments.style.format({'WinRate': '{:.2f}'}))
+        else:
+            st.warning("No combos found with at least 100 races for this bloodline.")
     
         # --- Custom augment combo testing ---
         st.subheader("🔧 Test a Custom Augment Combo")
@@ -208,6 +212,7 @@ def main():
                 st.success(f"{custom_combo} — {total} races, Win Rate in {selected_bloodline}: {win_rate:.2f}%")
             else:
                 st.warning("No races found with that augment combo for this bloodline.")
+
 
     
 
