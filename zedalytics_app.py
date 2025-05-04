@@ -157,9 +157,13 @@ def main():
         st.dataframe(augments.style.format({'Win %': '{:.2f}'}))
 
         st.subheader("🔧 Customize Augment Combo")
-        cpu = st.text_input("CPU Augment:", key="cpu")
-        ram = st.text_input("RAM Augment:", key="ram")
-        hyd = st.text_input("Hydraulic Augment:", key="hyd")
+        cpu_options = sorted(df['cpu_augment'].dropna().unique())
+        ram_options = sorted(df['ram_augment'].dropna().unique())
+        hyd_options = sorted(df['hydraulic_augment'].dropna().unique())
+
+        cpu = st.selectbox("CPU Augment:", options=[""] + cpu_options, key="cpu")
+        ram = st.selectbox("RAM Augment:", options=[""] + ram_options, key="ram")
+        hyd = st.selectbox("Hydraulic Augment:", options=[""] + hyd_options, key="hyd")
         custom_combo = f"{cpu} | {ram} | {hyd}"
 
         if custom_combo.strip(" |"):
