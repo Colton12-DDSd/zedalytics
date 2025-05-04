@@ -3,7 +3,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-plt.style.use("seaborn-darkgrid")  # Sleek darkish grid
+plt.style.use("dark_background")
 # URL to the live race results data
 CSV_URL = 'https://raw.githubusercontent.com/myblood-tempest/zed-champions-race-data/main/race_results.csv'
 
