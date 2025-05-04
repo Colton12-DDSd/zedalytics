@@ -34,28 +34,51 @@ def show_horse_dashboard(horse_df):
     col4.metric("Total Earnings", f"{int(total_earnings):,} ZED")
     col5.metric("Profit / Loss", f"{int(total_profit):,} ZED")
 
-    st.subheader("Finish Position Distribution")
-    fig1, ax1 = plt.subplots(figsize=(6, 3))
-    horse_df['finish_position'].value_counts().sort_index().plot(kind='bar', ax=ax1, color='skyblue')
-    ax1.set_xlabel("Finish Position")
-    ax1.set_ylabel("Number of Races")
-    st.pyplot(fig1)
+    st.subheader("Performance Charts")
 
-    st.subheader("Finish Position Over Time")
-    fig2, ax2 = plt.subplots(figsize=(6, 3))
-    ax2.plot(horse_df['race_date'], horse_df['finish_position'], marker='o')
-    ax2.set_ylabel("Finish (1 = Win)")
-    ax2.set_xlabel("Date")
-    ax2.invert_yaxis()
-    st.pyplot(fig2)
+    # First row
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**Finish Position Distribution**")
+        fig1, ax1 = plt.subplots(figsize=(5, 3))
+        horse_df['finish_position'].value_counts().sort_index().plot(kind='bar', ax=ax1, color='skyblue')
+        ax1.set_xlabel("Finish Position")
+        ax1.set_ylabel("Number of Races")
+        st.pyplot(fig1)
 
-    st.subheader("Cumulative Earnings")
-    horse_df.loc[:, 'cumulative_earnings'] = horse_df['earnings'].cumsum()
-    fig3, ax3 = plt.subplots(figsize=(6, 3))
-    ax3.plot(horse_df['race_date'], horse_df['cumulative_earnings'], marker='o', color='green')
-    ax3.set_ylabel("ZED")
-    ax3.set_xlabel("Date")
-    st.pyplot(fig3)
+    with col2:
+        st.markdown("**Finish Position Over Time**")
+        fig2, ax2 = plt.subplots(figsize=(5, 3))
+        ax2.plot(horse_df['race_date'], horse_df['finish_position'], marker='o')
+        ax2.set_ylabel("Finish (1 = Win)")
+        ax2.set_xlabel("Date")
+        ax2.invert_yaxis()
+        st.pyplot(fig2)
+
+    # Space between rows
+    st.markdown("###")
+
+    # Second row
+    col3, col4 = st.columns(2)
+    with col3:
+        st.markdown("**Cumulative Earnings**")
+        horse_df.loc[:, 'cumulative_earnings'] = horse_df['earnings'].cumsum()
+        fig3, ax3 = plt.subplots(figsize=(5, 3))
+        ax3.plot(horse_df['race_date'], horse_df['cumulative_earnings'], marker='o', color='green')
+        ax3.set_ylabel("ZED")
+        ax3.set_xlabel("Date")
+        st.pyplot(fig3)
+
+    with col4:
+        if 'points_change' in horse_df.columns:
+            st.markdown("**Cumulative Points Change**")
+            horse_df.loc[:, 'cumulative_points'] = horse_df['points_change'].cumsum()
+            fig4, ax4 = plt.subplots(figsize=(5, 3))
+            ax4.plot(horse_df['race_date'], horse_df['cumulative_points'], marker='o', color='purple')
+            ax4.set_ylabel("MMR Points")
+            ax4.set_xlabel("Date")
+            st.pyplot(fig4)
+
 
     if 'points_change' in horse_df.columns:
         horse_df.loc[:, 'cumulative_points'] = horse_df['points_change'].cumsum()
