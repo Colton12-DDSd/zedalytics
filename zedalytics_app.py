@@ -88,8 +88,36 @@ def main():
     tab1, tab2, tab3 = st.tabs(["🏇 Horses", "🏠 Stables", "⚙️ Augments"])
 
     with tab1:
-        # unchanged
-        pass
+        st.subheader("🏆 Top Horses by Current Balance")
+        balance_df = df.groupby(['horse_id', 'horse_name'], as_index=False)['profit_loss'].sum()
+        top_balance = balance_df.sort_values('profit_loss', ascending=False).head(5)
+
+        for _, row in top_balance.iterrows():
+            with st.container():
+                st.markdown(f"**{row['horse_name']}** — Balance: {int(row['profit_loss']):,} ZED")
+                if st.button("View Stats", key="bal" + row['horse_id']):
+                    horse_df = df[df['horse_id'] == row['horse_id']].sort_values('race_date')
+                    show_horse_dashboard(horse_df)
+
+        st.subheader("🔎 Search Horse by ID or Name")
+        user_input = st.text_input("Enter Horse ID or Name:", key="horse_search")
+        if user_input:
+            user_input = user_input.strip()
+            if len(user_input) == 36:
+                horse_df = df[df['horse_id'] == user_input].sort_values('race_date')
+            else:
+                matches = df[df['horse_name'].str.contains(user_input, case=False, na=False)]
+                if matches.empty:
+                    st.warning("No horses found matching that name.")
+                    return
+                selected_name = matches['horse_name'].unique()[0]
+                horse_df = matches[matches['horse_name'] == selected_name].sort_values('race_date')
+
+            if horse_df.empty:
+                st.warning("No race data found for this horse.")
+                return
+
+            show_horse_dashboard(horse_df)
 
     with tab2:
         st.subheader("🏠 Top Earning Stables")
