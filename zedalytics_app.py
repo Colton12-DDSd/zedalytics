@@ -134,9 +134,17 @@ def main():
         for _, row in top_balance.iterrows():
             with st.container():
                 st.markdown(f"**{row['horse_name']}** — Balance: {int(row['profit_loss']):,} ZED")
-                if st.button("View Stats", key="bal" + row['horse_id']):
+                horse_key = "show_" + row['horse_id']
+                if horse_key not in st.session_state:
+                    st.session_state[horse_key] = False
+                
+                if st.button("View Stats" if not st.session_state[horse_key] else "Hide Stats", key="bal" + row['horse_id']):
+                    st.session_state[horse_key] = not st.session_state[horse_key]
+                
+                if st.session_state[horse_key]:
                     horse_df = df[df['horse_id'] == row['horse_id']].sort_values('race_date')
                     show_horse_dashboard(horse_df, df)
+                
 
         st.subheader("🔎 Search Horse by ID or Name")
         user_input = st.text_input("Enter Horse ID or Name:", key="horse_search")
