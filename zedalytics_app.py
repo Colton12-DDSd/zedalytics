@@ -64,7 +64,7 @@ def show_horse_dashboard(horse_df, full_df):
     
         ax2.set_xlabel("Finish Time")
         ax2.set_ylabel("Frequency")
-        ax2.legend()
+        ax2.legend(fontsize="small")
         st.pyplot(fig2)
 
 
