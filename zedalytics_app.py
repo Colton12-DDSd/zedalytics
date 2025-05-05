@@ -286,31 +286,74 @@ def main():
                 st.warning("No races found with that augment combo for this bloodline.")
 
     with tab4:
-            st.subheader("🥇 Leaderboards")
+        st.subheader("🥇 Leaderboards")
     
-            # Preprocess base data
-            horse_stats = df.groupby(['horse_id', 'horse_name'], as_index=False).agg(
-                races=('finish_position', 'count'),
-                wins=('finish_position', lambda x: (x == 1).sum()),
-                win_pct=('finish_position', lambda x: (x == 1).mean() * 100),
-                avg_time=('finish_time', 'mean'),
-                total_profit=('profit_loss', 'sum')
-            )
+        # Preprocess base data
+        horse_stats = df.groupby(['horse_id', 'horse_name'], as_index=False).agg(
+            races=('finish_position', 'count'),
+            wins=('finish_position', lambda x: (x == 1).sum()),
+            win_pct=('finish_position', lambda x: (x == 1).mean() * 100),
+            avg_time=('finish_time', 'mean'),
+            total_profit=('profit_loss', 'sum')
+        )
     
-            # Top by Profit
-            st.markdown("### 💰 Top 10 Horses by Profit")
-            top_profit = horse_stats.sort_values('total_profit', ascending=False).head(10)
-            st.dataframe(top_profit[['horse_name', 'races', 'total_profit']].style.format({'total_profit': '{:,.0f} ZED'}))
+        # 💸 Top by Profit
+        st.markdown("### 💰 Top 10 Horses by Profit")
+        top_profit = horse_stats.sort_values('total_profit', ascending=False).head(10)
+        st.dataframe(top_profit[['horse_name', 'races', 'total_profit']].style.format({'total_profit': '{:,.0f} ZED'}))
     
-            # Top by Win %
-            st.markdown("### 🏆 Top 10 Horses by Win % (min 20 races)")
-            top_win_pct = horse_stats[horse_stats['races'] >= 20].sort_values('win_pct', ascending=False).head(10)
-            st.dataframe(top_win_pct[['horse_name', 'races', 'win_pct']].style.format({'win_pct': '{:.2f}%'}))
+        # 🏆 Top by Win %
+        st.markdown("### 🏆 Top 10 Horses by Win % (min 20 races)")
+        top_win_pct = horse_stats[horse_stats['races'] >= 20].sort_values('win_pct', ascending=False).head(10)
+        st.dataframe(top_win_pct[['horse_name', 'races', 'win_pct']].style.format({'win_pct': '{:.2f}%'}))
     
-            # Top by Fastest Avg Time
-            st.markdown("### ⏱️ Top 10 Horses by Avg Finish Time (min 20 races)")
-            top_time = horse_stats[horse_stats['races'] >= 20].sort_values('avg_time').head(10)
-            st.dataframe(top_time[['horse_name', 'races', 'avg_time']].style.format({'avg_time': '{:.2f}'}))
+        # ⚡️ Top by Avg Finish Time
+        st.markdown("### ⏱️ Top 10 Horses by Avg Finish Time (min 20 races)")
+        top_time = horse_stats[horse_stats['races'] >= 20].sort_values('avg_time').head(10)
+        st.dataframe(top_time[['horse_name', 'races', 'avg_time']].style.format({'avg_time': '{:.2f}'}))
+    
+        # 🏁 Fastest Individual Finish Times
+        st.markdown("### 🏁 Fastest Individual Finish Times")
+        fastest_df = df.dropna(subset=["finish_time"]).sort_values("finish_time").head(10)
+        fastest_df["Augments"] = (
+            fastest_df['cpu_augment'].fillna('') + " | " +
+            fastest_df['ram_augment'].fillna('') + " | " +
+            fastest_df['hydraulic_augment'].fillna('')
+        )
+        st.dataframe(fastest_df[['horse_name', 'finish_time', 'Augments']].rename(columns={'finish_time': 'Fastest Time'}).style.format({'Fastest Time': '{:.2f}'}))
+    
+        # 💥 Biggest Single-Race ZED Win
+        st.markdown("### 💥 Biggest Single-Race ZED Win")
+        biggest_win = df.sort_values("profit_loss", ascending=False).head(10)
+        biggest_win["Augments"] = (
+            biggest_win['cpu_augment'].fillna('') + " | " +
+            biggest_win['ram_augment'].fillna('') + " | " +
+            biggest_win['hydraulic_augment'].fillna('')
+        )
+        st.dataframe(biggest_win[['horse_name', 'profit_loss', 'Augments']].rename(columns={'profit_loss': 'ZED Won'}).style.format({'ZED Won': '{:,.0f} ZED'}))
+    
+        # ⚙️ Fastest Avg Horses + Most Common Augs
+        st.markdown("### ⚙️ Top 10 Fastest Avg Horses + Common Augments")
+        avg_times = df.dropna(subset=["finish_time"]).groupby(['horse_id', 'horse_name']).agg(
+            avg_time=('finish_time', 'mean'),
+            races=('finish_time', 'count')
+        ).query("races >= 5").sort_values("avg_time").head(10)
+    
+        top_fastest_ids = avg_times.index.get_level_values('horse_id')
+        popular_augs = df[df['horse_id'].isin(top_fastest_ids)].groupby('horse_id').agg(
+            most_common_cpu=('cpu_augment', lambda x: x.mode().iloc[0] if not x.mode().empty else ""),
+            most_common_ram=('ram_augment', lambda x: x.mode().iloc[0] if not x.mode().empty else ""),
+            most_common_hyd=('hydraulic_augment', lambda x: x.mode().iloc[0] if not x.mode().empty else "")
+        )
+    
+        leaderboard_avg = avg_times.reset_index().merge(popular_augs.reset_index(), on="horse_id")
+        leaderboard_avg["Augments"] = (
+            leaderboard_avg['most_common_cpu'] + " | " +
+            leaderboard_avg['most_common_ram'] + " | " +
+            leaderboard_avg['most_common_hyd']
+        )
+        st.dataframe(leaderboard_avg[['horse_name', 'avg_time', 'races', 'Augments']].style.format({'avg_time': '{:.2f}'}))
+
 
 if __name__ == "__main__":
     main()
