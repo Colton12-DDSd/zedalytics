@@ -79,7 +79,7 @@ def show_horse_dashboard(horse_df):
             ax4.set_xlabel("Race Number")
             st.pyplot(fig4)
 
-    st.subheader("Top Augment Combinations (Min. 100 Races)")
+    st.subheader("Top Augment Combinations")
     horse_df['augment_combo'] = (
         horse_df['cpu_augment'].fillna('') + ' | ' +
         horse_df['ram_augment'].fillna('') + ' | ' +
@@ -92,8 +92,7 @@ def show_horse_dashboard(horse_df):
     })
     
     augment_group.columns = ['Races', 'Win %', 'Avg Finish Time']
-    augment_group = augment_group[augment_group['Races'] >= 100]
-    augment_group = augment_group.sort_values('Win %', ascending=False).head(5)
+    augment_group = augment_group.sort_values('Races', ascending=False).head(5)
     
     st.dataframe(augment_group.style.format({
         'Win %': '{:.2f}',
