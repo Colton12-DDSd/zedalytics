@@ -7,7 +7,7 @@ plt.style.use("dark_background")
 # URL to the live race results data
 CSV_URL = 'https://raw.githubusercontent.com/myblood-tempest/zed-champions-race-data/main/race_results.csv'
 
-@st.cache_data(ttl=7200)
+@st.cache_data(ttl=600)
 def load_data():
     df = pd.read_csv(CSV_URL)
     df['race_date'] = pd.to_datetime(df['race_date'], errors='coerce')
