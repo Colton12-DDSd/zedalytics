@@ -122,6 +122,12 @@ def show_horse_dashboard(horse_df, full_df):
 def main():
     st.set_page_config(page_title="Zedalytics", layout="wide")
     st.title("Zedalytics")
+    st.markdown("""
+    > ⚠️ **Data Disclaimer**  
+    > The race data displayed is sourced from a public GitHub file and may not reflect the full race history available on ZED Champions.  
+    > Some races may be missing until a complete and official API is available.
+    """)
+
     df = load_data()
     df['augment_combo'] = (
     df['cpu_augment'].fillna('') + ' | ' +
