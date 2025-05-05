@@ -131,7 +131,7 @@ def main():
         balance_df = df.groupby(['horse_id', 'horse_name'], as_index=False)['profit_loss'].sum()
         top_balance = balance_df.sort_values('profit_loss', ascending=False).head(5)
     
-        # Initialize active horse tracker for accordion behavior
+        # Initialize accordion tracker
         if "active_horse_id" not in st.session_state:
             st.session_state["active_horse_id"] = None
     
@@ -142,14 +142,14 @@ def main():
     
                 st.markdown(f"**{row['horse_name']}** — Balance: {int(row['profit_loss']):,} ZED")
     
-                if st.button("View Stats" if not is_active else "Hide Stats", key="btn_" + horse_id):
-                    # Accordion toggle logic
-                    if is_active:
-                        st.session_state["active_horse_id"] = None
-                    else:
-                        st.session_state["active_horse_id"] = horse_id
+                clicked = st.button("Hide Stats" if is_active else "View Stats", key="btn_" + horse_id)
     
-                if is_active:
+                if clicked:
+                    # If already open, close it; otherwise, open the new one
+                    st.session_state["active_horse_id"] = None if is_active else horse_id
+    
+                # Show dashboard if active horse is selected (after state update)
+                if st.session_state["active_horse_id"] == horse_id:
                     horse_df = df[df['horse_id'] == horse_id].sort_values('race_date')
                     show_horse_dashboard(horse_df, df)
     
@@ -172,6 +172,7 @@ def main():
                 return
     
             show_horse_dashboard(horse_df, df)
+
 
 
     with tab2:
