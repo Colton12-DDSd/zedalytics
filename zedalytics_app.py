@@ -206,9 +206,11 @@ def main():
             col2.metric("Total Wins", total_wins)
             col3.metric("Win %", f"{win_pct:.2f}%")
 
-            col4, col5 = st.columns(2)
+            col4, col5, col6 = st.columns(3)
             col4.metric("Total Earnings", f"{int(total_earnings):,} ZED")
             col5.metric("Total Profit", f"{int(total_profit):,} ZED")
+            col6.metric("Win %", f"{win_pct:.2f}%")
+
 
             horses = filtered[['horse_name', 'horse_id']].drop_duplicates()
             for _, row in horses.iterrows():
