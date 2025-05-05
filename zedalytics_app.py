@@ -55,9 +55,12 @@ def show_horse_dashboard(horse_df, full_df):
     
         horse_avg_time = horse_df['finish_time'].mean()
         horse_min_time = horse_df['finish_time'].min()
+        horse_slowest_time = horse_df['finish_time'].max()
     
         ax2.axvline(horse_avg_time, color='cyan', linestyle='--', linewidth=2, label=f"{name}'s Avg")
-        ax2.axvline(horse_min_time, color='yellow', linestyle='--', linewidth=2, label=f"{name}'s Fastest")
+        ax2.axvline(horse_min_time, color='green', linestyle='--', linewidth=2, label=f"{name}'s Fastest")
+        ax2.axvline(horse_slowest_time, color='red', linestyle=':', linewidth=2, label=f"{name}'s Slowest")
+
     
         ax2.set_xlabel("Finish Time")
         ax2.set_ylabel("Frequency")
