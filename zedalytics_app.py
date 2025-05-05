@@ -13,7 +13,7 @@ def load_data():
     df['race_date'] = pd.to_datetime(df['race_date'], errors='coerce')
     return df
 
-def show_horse_dashboard(horse_df):
+def show_horse_dashboard(horse_df, full_df):
     horse_df = horse_df.copy()
     name = horse_df['horse_name'].iloc[0]
     stable_name = horse_df['stable_name'].iloc[0] if 'stable_name' in horse_df.columns else "Unknown"
@@ -48,26 +48,17 @@ def show_horse_dashboard(horse_df):
         st.pyplot(fig1)
 
     with col2:
-        st.markdown("**Finish Time Distribution (All Horses) vs. This Horse's Average**")
-        fig, ax = plt.subplots(figsize=(5, 3))
-    
-        # All finish times from the dataset (global)
-        all_finish_times = df['finish_time'].dropna()
-    
-        # Histogram (bell curve look)
-        ax.hist(all_finish_times, bins=30, color='gray', alpha=0.6, edgecolor='white', label="All Horses")
-    
-        # This horse's average finish time
+        st.markdown("**Finish Time Distribution (All Horses) vs. This Horse's Avg**")
+        fig2, ax2 = plt.subplots(figsize=(5, 3))
+        all_finish_times = full_df['finish_time'].dropna()
+        ax2.hist(all_finish_times, bins=30, color='gray', alpha=0.6, edgecolor='white', label="All Horses")
         horse_avg_time = horse_df['finish_time'].mean()
-        ax.axvline(horse_avg_time, color='cyan', linestyle='--', linewidth=2, label=f"{name}'s Avg")
-    
-        ax.set_xlabel("Finish Time")
-        ax.set_ylabel("Frequency")
-        ax.legend()
-        st.pyplot(fig)
+        ax2.axvline(horse_avg_time, color='cyan', linestyle='--', linewidth=2, label=f"{name}'s Avg")
+        ax2.set_xlabel("Finish Time")
+        ax2.set_ylabel("Frequency")
+        ax2.legend()
+        st.pyplot(fig2)
 
-
-    # Space between rows
     st.markdown("###")
 
     # Second row
@@ -91,26 +82,25 @@ def show_horse_dashboard(horse_df):
             ax4.set_xlabel("Race Number")
             st.pyplot(fig4)
 
-    st.subheader("Top Augment Combinations")
+    st.subheader("Top Augment Combinations (Min. 100 Races)")
     horse_df['augment_combo'] = (
         horse_df['cpu_augment'].fillna('') + ' | ' +
         horse_df['ram_augment'].fillna('') + ' | ' +
         horse_df['hydraulic_augment'].fillna('')
     )
-    
+
     augment_group = horse_df.groupby('augment_combo').agg({
         'finish_position': ['count', lambda x: (x == 1).mean() * 100],
         'finish_time': 'mean'
     })
-    
     augment_group.columns = ['Races', 'Win %', 'Avg Finish Time']
-    augment_group = augment_group.sort_values('Races', ascending=False).head(5)
-    
+    augment_group = augment_group[augment_group['Races'] >= 100]
+    augment_group = augment_group.sort_values('Win %', ascending=False).head(5)
+
     st.dataframe(augment_group.style.format({
         'Win %': '{:.2f}',
         'Avg Finish Time': '{:.2f}'
     }))
-
 
     st.markdown("---")
     horse_id = horse_df['horse_id'].iloc[0]
@@ -123,7 +113,6 @@ def show_horse_dashboard(horse_df):
         """,
         unsafe_allow_html=True
     )
-
 
 def main():
     st.set_page_config(page_title="Zedalytics", layout="wide")
