@@ -48,12 +48,24 @@ def show_horse_dashboard(horse_df):
         st.pyplot(fig1)
 
     with col2:
-        st.markdown("**Finish Time Over Race Count**")
-        fig2, ax2 = plt.subplots(figsize=(5, 3))
-        ax2.plot(race_nums, horse_df['finish_time'], marker='o')
-        ax2.set_ylabel("Finish Time")
-        ax2.set_xlabel("Race Number")
-        st.pyplot(fig2)
+        st.markdown("**Finish Time Distribution (All Horses) vs. This Horse's Average**")
+        fig, ax = plt.subplots(figsize=(5, 3))
+    
+        # All finish times from the dataset (global)
+        all_finish_times = df['finish_time'].dropna()
+    
+        # Histogram (bell curve look)
+        ax.hist(all_finish_times, bins=30, color='gray', alpha=0.6, edgecolor='white', label="All Horses")
+    
+        # This horse's average finish time
+        horse_avg_time = horse_df['finish_time'].mean()
+        ax.axvline(horse_avg_time, color='cyan', linestyle='--', linewidth=2, label=f"{name}'s Avg")
+    
+        ax.set_xlabel("Finish Time")
+        ax.set_ylabel("Frequency")
+        ax.legend()
+        st.pyplot(fig)
+
 
     # Space between rows
     st.markdown("###")
