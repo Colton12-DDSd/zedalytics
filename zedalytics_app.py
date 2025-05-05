@@ -216,11 +216,18 @@ def main():
             for _, row in horses.iterrows():
                 horse_df = filtered[filtered['horse_id'] == row['horse_id']].copy()
                 with st.container():
+                    total_races = len(horse_df)
+                    win_pct = (horse_df['finish_position'] == 1).mean() * 100
+                    total_earnings = int(horse_df['earnings'].sum())
+                    total_profit = int(horse_df['profit_loss'].sum())
+            
                     st.markdown(f"**{row['horse_name']}**")
-                    st.markdown(f"Races: {len(horse_df)} | Win %: {(horse_df['finish_position'] == 1).mean() * 100:.2f}%")
-                    st.markdown(f"Earnings: {int(horse_df['earnings'].sum()):,} ZED")
+                    st.markdown(f"Races: {total_races} | Win %: {win_pct:.2f}%")
+                    st.markdown(f"Earnings: {total_earnings:,} ZED | Profit: {total_profit:,} ZED")
+            
                     if st.button("View Stats", key=row['horse_id']):
                         show_horse_dashboard(horse_df, df)
+
 
     with tab3:
         st.subheader("⚙️ Augment Analytics")
