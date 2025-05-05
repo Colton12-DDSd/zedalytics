@@ -137,7 +137,7 @@ def main():
                 st.markdown(f"**{row['horse_name']}** — Balance: {int(row['profit_loss']):,} ZED")
                 if st.button("View Stats", key="bal" + row['horse_id']):
                     horse_df = df[df['horse_id'] == row['horse_id']].sort_values('race_date')
-                    show_horse_dashboard(horse_df)
+                    show_horse_dashboard(horse_df, df)
 
         st.subheader("🔎 Search Horse by ID or Name")
         user_input = st.text_input("Enter Horse ID or Name:", key="horse_search")
@@ -157,7 +157,7 @@ def main():
                 st.warning("No race data found for this horse.")
                 return
 
-            show_horse_dashboard(horse_df)
+            show_horse_dashboard(horse_df, df)
 
     with tab2:
         st.subheader("🏠 Top Earning Stables")
@@ -196,7 +196,7 @@ def main():
                     st.markdown(f"Races: {len(horse_df)} | Win %: {(horse_df['finish_position'] == 1).mean() * 100:.2f}%")
                     st.markdown(f"Earnings: {int(horse_df['earnings'].sum()):,} ZED")
                     if st.button("View Stats", key=row['horse_id']):
-                        show_horse_dashboard(horse_df)
+                        show_horse_dashboard(horse_df, df)
 
     with tab3:
         st.subheader("⚙️ Augment Analytics")
