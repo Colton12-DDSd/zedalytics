@@ -79,18 +79,27 @@ def show_horse_dashboard(horse_df):
             ax4.set_xlabel("Race Number")
             st.pyplot(fig4)
 
-    st.subheader("Top Augment Combinations")
+    st.subheader("Top Augment Combinations (Min. 100 Races)")
     horse_df['augment_combo'] = (
         horse_df['cpu_augment'].fillna('') + ' | ' +
         horse_df['ram_augment'].fillna('') + ' | ' +
         horse_df['hydraulic_augment'].fillna('')
     )
+    
     augment_group = horse_df.groupby('augment_combo').agg({
-        'finish_position': ['count', lambda x: (x == 1).mean() * 100]
-    }).rename(columns={'count': 'Races', '<lambda_0>': 'Win %'})
-    augment_group.columns = augment_group.columns.droplevel(0)
-    augment_group = augment_group.sort_values('Races', ascending=False).head(5)
-    st.dataframe(augment_group.style.format({'Win %': '{:.2f}'}))
+        'finish_position': ['count', lambda x: (x == 1).mean() * 100],
+        'finish_time': 'mean'
+    })
+    
+    augment_group.columns = ['Races', 'Win %', 'Avg Finish Time']
+    augment_group = augment_group[augment_group['Races'] >= 100]
+    augment_group = augment_group.sort_values('Win %', ascending=False).head(5)
+    
+    st.dataframe(augment_group.style.format({
+        'Win %': '{:.2f}',
+        'Avg Finish Time': '{:.2f}'
+    }))
+
 
     st.markdown("---")
     horse_id = horse_df['horse_id'].iloc[0]
@@ -209,19 +218,28 @@ def main():
             filtered_df['hydraulic_augment'].fillna('')
         )
     
-        # --- Top combos by Win Rate (Min 100 Races) ---
-        st.subheader(f"🏆 Top 5 Augment Combos by Win Rate ({selected_bloodline}) — *Min. 100 races*")
+        # --- Sorting toggle ---
+        st.subheader("Top Augment Combinations (Min. 100 Races)")
+        sort_option = st.radio("Sort by:", options=["Win %", "Avg Finish Time"], horizontal=True)
     
-        augments = filtered_df.groupby('augment_combo').agg(
-            Races=('finish_position', 'count'),
-            Wins=('finish_position', lambda x: (x == 1).sum()),
-            WinRate=('finish_position', lambda x: (x == 1).mean() * 100)
-        ).query("Races >= 100").sort_values('WinRate', ascending=False).head(5)
+        # --- Group and sort ---
+        augment_group = filtered_df.groupby('augment_combo').agg({
+            'finish_position': ['count', lambda x: (x == 1).mean() * 100],
+            'finish_time': 'mean'
+        })
     
-        if not augments.empty:
-            st.dataframe(augments.style.format({'WinRate': '{:.2f}'}))
+        augment_group.columns = ['Races', 'Win %', 'Avg Finish Time']
+        augment_group = augment_group[augment_group['Races'] >= 100]
+    
+        if sort_option == "Win %":
+            augment_group = augment_group.sort_values('Win %', ascending=False)
         else:
-            st.warning("No combos found with at least 100 races for this bloodline.")
+            augment_group = augment_group.sort_values('Avg Finish Time')
+    
+        st.dataframe(augment_group.head(5).style.format({
+            'Win %': '{:.2f}',
+            'Avg Finish Time': '{:.2f}'
+        }))
     
         # --- Custom augment combo testing ---
         st.subheader("🔧 Test a Custom Augment Combo")
@@ -240,9 +258,11 @@ def main():
             if not match.empty:
                 total = len(match)
                 win_rate = (match['finish_position'] == 1).mean() * 100
-                st.success(f"{custom_combo} — {total} races, Win Rate in {selected_bloodline}: {win_rate:.2f}%")
+                avg_time = match['finish_time'].mean()
+                st.success(f"{custom_combo} — {total} races, Win Rate: {win_rate:.2f}%, Avg Finish Time: {avg_time:.2f}")
             else:
                 st.warning("No races found with that augment combo for this bloodline.")
+
 
 if __name__ == "__main__":
     main()
