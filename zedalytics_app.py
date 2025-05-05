@@ -130,22 +130,29 @@ def main():
         st.subheader("🏆 Top Horses by Current Balance")
         balance_df = df.groupby(['horse_id', 'horse_name'], as_index=False)['profit_loss'].sum()
         top_balance = balance_df.sort_values('profit_loss', ascending=False).head(5)
-
+    
+        # Initialize active horse tracker for accordion behavior
+        if "active_horse_id" not in st.session_state:
+            st.session_state["active_horse_id"] = None
+    
         for _, row in top_balance.iterrows():
             with st.container():
+                horse_id = row['horse_id']
+                is_active = st.session_state["active_horse_id"] == horse_id
+    
                 st.markdown(f"**{row['horse_name']}** — Balance: {int(row['profit_loss']):,} ZED")
-                horse_key = "show_" + row['horse_id']
-                if horse_key not in st.session_state:
-                    st.session_state[horse_key] = False
-                
-                if st.button("View Stats" if not st.session_state[horse_key] else "Hide Stats", key="bal" + row['horse_id']):
-                    st.session_state[horse_key] = not st.session_state[horse_key]
-                
-                if st.session_state[horse_key]:
-                    horse_df = df[df['horse_id'] == row['horse_id']].sort_values('race_date')
+    
+                if st.button("View Stats" if not is_active else "Hide Stats", key="btn_" + horse_id):
+                    # Accordion toggle logic
+                    if is_active:
+                        st.session_state["active_horse_id"] = None
+                    else:
+                        st.session_state["active_horse_id"] = horse_id
+    
+                if is_active:
+                    horse_df = df[df['horse_id'] == horse_id].sort_values('race_date')
                     show_horse_dashboard(horse_df, df)
-                
-
+    
         st.subheader("🔎 Search Horse by ID or Name")
         user_input = st.text_input("Enter Horse ID or Name:", key="horse_search")
         if user_input:
@@ -159,12 +166,13 @@ def main():
                     return
                 selected_name = matches['horse_name'].unique()[0]
                 horse_df = matches[matches['horse_name'] == selected_name].sort_values('race_date')
-
+    
             if horse_df.empty:
                 st.warning("No race data found for this horse.")
                 return
-
+    
             show_horse_dashboard(horse_df, df)
+
 
     with tab2:
         st.subheader("🏠 Top Earning Stables")
