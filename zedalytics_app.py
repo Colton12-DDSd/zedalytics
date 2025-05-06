@@ -369,13 +369,19 @@ def main():
         if recent_df.empty:
             st.info("No races found in the last 24 hours.")
         else:
-            # Rename for clarity
+            # Fill missing star ratings with "Unknown"
+            recent_df[['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']] = (
+                recent_df[['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']].fillna("Unknown")
+            )
+            
+            # Then rename for UI
             recent_df.rename(columns={
                 "rating": "stars",
                 "speed_rating": "speed_stars",
                 "sprint_rating": "sprint_stars",
                 "endurance_rating": "endurance_stars"
             }, inplace=True)
+
     
             # Dropdown filters
             bloodlines = ["All"] + sorted(recent_df['bloodline'].dropna().unique())
