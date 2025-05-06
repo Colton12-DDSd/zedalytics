@@ -18,7 +18,7 @@ def render_horse_detail(horse_id, df, show_horse_dashboard):
     race_nums = range(1, total_races + 1)
 
     st.title(f"📊 Detailed Stats for {name}")
-    st.button("🔙 Back to Horses", on_click=lambda: st.experimental_set_query_params())
+    st.button("🔙 Back to Horses", on_click=lambda: st.query_params.clear())
 
     st.text(f"Stable: {stable_name}")
     col1, col2, col3 = st.columns(3)
@@ -31,58 +31,53 @@ def render_horse_detail(horse_id, df, show_horse_dashboard):
     col5.metric("Profit / Loss", f"{int(total_profit):,} ZED")
 
     st.subheader("Performance Charts")
+    col1, col2, col3, col4 = st.columns(4)
 
-    # First row: Finish Position and Time Distributions
-    col1, col2 = st.columns(2)
     with col1:
-        st.markdown("**Finish Position Distribution**")
-        fig1, ax1 = plt.subplots(figsize=(5, 3))
+        st.markdown("**Finish Position**")
+        fig1, ax1 = plt.subplots(figsize=(4, 2.5))
         horse_df['finish_position'].value_counts().sort_index().plot(kind='bar', ax=ax1, color='skyblue')
-        ax1.set_xlabel("Finish Position")
-        ax1.set_ylabel("Number of Races")
+        ax1.set_xlabel("Position")
+        ax1.set_ylabel("Count")
         st.pyplot(fig1)
 
     with col2:
-        st.markdown("**Finish Time Distribution (All Horses) vs. This Horse**")
-        fig2, ax2 = plt.subplots(figsize=(5, 3))
-        all_finish_times = df['finish_time'].dropna()
-        ax2.hist(all_finish_times, bins=30, color='gray', alpha=0.6, edgecolor='white', label="All Horses")
-        horse_avg_time = horse_df['finish_time'].mean()
-        horse_min_time = horse_df['finish_time'].min()
-        horse_max_time = horse_df['finish_time'].max()
-
-        ax2.axvline(horse_avg_time, color='cyan', linestyle='--', linewidth=2, label=f"{name}'s Avg")
-        ax2.axvline(horse_min_time, color='green', linestyle='--', linewidth=2, label=f"{name}'s Fastest")
-        ax2.axvline(horse_max_time, color='red', linestyle=':', linewidth=2, label=f"{name}'s Slowest")
-        ax2.set_xlabel("Finish Time")
+        st.markdown("**Finish Time Histogram**")
+        fig2, ax2 = plt.subplots(figsize=(4, 2.5))
+        all_times = df['finish_time'].dropna()
+        ax2.hist(all_times, bins=30, color='gray', alpha=0.6, edgecolor='white')
+        avg = horse_df['finish_time'].mean()
+        min_time = horse_df['finish_time'].min()
+        max_time = horse_df['finish_time'].max()
+        ax2.axvline(avg, color='cyan', linestyle='--', linewidth=2, label="Avg")
+        ax2.axvline(min_time, color='green', linestyle='--', linewidth=2, label="Fastest")
+        ax2.axvline(max_time, color='red', linestyle=':', linewidth=2, label="Slowest")
+        ax2.set_xlabel("Time")
         ax2.set_ylabel("Frequency")
-        ax2.legend(fontsize='small')
+        ax2.legend(fontsize='x-small')
         st.pyplot(fig2)
 
-    st.markdown("###")
-
-    # Second row: Cumulative charts
-    col3, col4 = st.columns(2)
     with col3:
-        st.markdown("**Cumulative Earnings**")
+        st.markdown("**Earnings Over Time**")
         horse_df['cumulative_earnings'] = horse_df['earnings'].cumsum()
-        fig3, ax3 = plt.subplots(figsize=(5, 3))
-        ax3.plot(race_nums, horse_df['cumulative_earnings'], marker='o', color='green')
+        fig3, ax3 = plt.subplots(figsize=(4, 2.5))
+        ax3.plot(horse_df['cumulative_earnings'], marker='o', color='green')
+        ax3.set_xlabel("Race #")
         ax3.set_ylabel("ZED")
-        ax3.set_xlabel("Race Number")
         st.pyplot(fig3)
 
     with col4:
+        st.markdown("**MMR Points Over Time**")
         if 'points_change' in horse_df.columns:
-            st.markdown("**Cumulative Points Change**")
             horse_df['cumulative_points'] = horse_df['points_change'].cumsum()
-            fig4, ax4 = plt.subplots(figsize=(5, 3))
-            ax4.plot(race_nums, horse_df['cumulative_points'], marker='o', color='purple')
-            ax4.set_ylabel("MMR Points")
-            ax4.set_xlabel("Race Number")
+            fig4, ax4 = plt.subplots(figsize=(4, 2.5))
+            ax4.plot(horse_df['cumulative_points'], marker='o', color='purple')
+            ax4.set_xlabel("Race #")
+            ax4.set_ylabel("Points")
             st.pyplot(fig4)
+        else:
+            st.info("No points data.")
 
-    # Augment breakdown
     st.subheader("Top Augment Combinations")
     horse_df['augment_combo'] = (
         horse_df['cpu_augment'].fillna('') + ' | ' +
