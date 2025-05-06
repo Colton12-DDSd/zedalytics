@@ -369,12 +369,13 @@ def main():
         if recent_df.empty:
             st.info("No races found in the last 24 hours.")
         else:
-            # Fill NaNs with -1 for filtering logic
-            recent_df[['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']] = (
-                recent_df[['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']].fillna(-1)
-            )
+            # Fill missing rating-related columns BEFORE renaming
+            for col in ['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']:
+                if col not in recent_df.columns:
+                    recent_df[col] = np.nan  # fallback in case column is missing entirely
+                recent_df[col] = recent_df[col].fillna(-1)
     
-            # Rename for UI clarity
+            # Rename for filtering/UI
             recent_df.rename(columns={
                 "rating": "stars",
                 "speed_rating": "speed_stars",
@@ -382,34 +383,26 @@ def main():
                 "endurance_rating": "endurance_stars"
             }, inplace=True)
     
-            # --- Dropdown Option Formatter ---
-            def format_dropdown_options(series):
-                unique_vals = series.dropna().unique()
-                formatted = ["Unknown" if val == -1 else str(val) for val in unique_vals]
+            # Helper: format dropdown values with "Unknown" and safe sorting
+            def get_dropdown_options(col):
+                vals = recent_df[col].unique()
+                formatted = ["Unknown" if v == -1 else str(v) for v in vals]
                 try:
-                    # Try to sort numerically but treat "Unknown" as lowest
-                    sorted_vals = sorted([v for v in formatted if v != "Unknown"], key=lambda x: float(x))
+                    sorted_vals = sorted([v for v in formatted if v != "Unknown"], key=float)
                     return ["All", "Unknown"] + sorted_vals
                 except:
                     return ["All"] + sorted(formatted)
     
-            # Filters
+            # UI filters
             bloodlines = ["All"] + sorted(recent_df['bloodline'].dropna().unique())
             selected_bloodline = st.selectbox("Filter by Bloodline:", bloodlines)
     
-            stars = format_dropdown_options(recent_df['stars'])
-            selected_stars = st.selectbox("Filter by Overall Stars:", stars)
+            selected_stars = st.selectbox("Filter by Overall Stars:", get_dropdown_options("stars"))
+            selected_speed = st.selectbox("Filter by Speed Stars:", get_dropdown_options("speed_stars"))
+            selected_sprint = st.selectbox("Filter by Sprint Stars:", get_dropdown_options("sprint_stars"))
+            selected_endurance = st.selectbox("Filter by Endurance Stars:", get_dropdown_options("endurance_stars"))
     
-            speed_stars = format_dropdown_options(recent_df['speed_stars'])
-            selected_speed = st.selectbox("Filter by Speed Stars:", speed_stars)
-    
-            sprint_stars = format_dropdown_options(recent_df['sprint_stars'])
-            selected_sprint = st.selectbox("Filter by Sprint Stars:", sprint_stars)
-    
-            endurance_stars = format_dropdown_options(recent_df['endurance_stars'])
-            selected_endurance = st.selectbox("Filter by Endurance Stars:", endurance_stars)
-    
-            # Helper to decode back to -1
+            # Helper to decode
             def decode(val):
                 return -1 if val == "Unknown" else float(val)
     
@@ -425,7 +418,7 @@ def main():
             if selected_endurance != "All":
                 recent_df = recent_df[recent_df['endurance_stars'] == decode(selected_endurance)]
     
-            # Show most recent race per horse
+            # Final grouped result
             latest_races = (
                 recent_df.sort_values("race_date", ascending=False)
                 .groupby(["horse_id", "horse_name", "stable_name", "bloodline", "stars", "speed_stars", "sprint_stars", "endurance_stars"], as_index=False)
