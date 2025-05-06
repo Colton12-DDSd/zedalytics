@@ -369,31 +369,55 @@ def main():
         if recent_df.empty:
             st.info("No races found in the last 24 hours.")
         else:
-            # Dropdowns for filtering
+            # Rename for clarity
+            recent_df.rename(columns={
+                "rating": "stars",
+                "speed_rating": "speed_stars",
+                "sprint_rating": "sprint_stars",
+                "endurance_rating": "endurance_stars"
+            }, inplace=True)
+    
+            # Dropdown filters
             bloodlines = ["All"] + sorted(recent_df['bloodline'].dropna().unique())
             selected_bloodline = st.selectbox("Filter by Bloodline:", bloodlines)
     
             stars = ["All"] + sorted(recent_df['stars'].dropna().unique())
-            selected_stars = st.selectbox("Filter by Star Rating:", stars)
+            selected_stars = st.selectbox("Filter by Overall Stars:", stars)
+    
+            speed_stars = ["All"] + sorted(recent_df['speed_stars'].dropna().unique())
+            selected_speed = st.selectbox("Filter by Speed Stars:", speed_stars)
+    
+            sprint_stars = ["All"] + sorted(recent_df['sprint_stars'].dropna().unique())
+            selected_sprint = st.selectbox("Filter by Sprint Stars:", sprint_stars)
+    
+            endurance_stars = ["All"] + sorted(recent_df['endurance_stars'].dropna().unique())
+            selected_endurance = st.selectbox("Filter by Endurance Stars:", endurance_stars)
     
             # Apply filters
             if selected_bloodline != "All":
                 recent_df = recent_df[recent_df['bloodline'] == selected_bloodline]
-    
             if selected_stars != "All":
                 recent_df = recent_df[recent_df['stars'] == selected_stars]
+            if selected_speed != "All":
+                recent_df = recent_df[recent_df['speed_stars'] == selected_speed]
+            if selected_sprint != "All":
+                recent_df = recent_df[recent_df['sprint_stars'] == selected_sprint]
+            if selected_endurance != "All":
+                recent_df = recent_df[recent_df['endurance_stars'] == selected_endurance]
     
-            # Aggregate most recent race per horse
+            # Aggregate latest race per horse
             latest_races = (
                 recent_df.sort_values("race_date", ascending=False)
-                .groupby(["horse_id", "horse_name", "stable_name", "bloodline", "stars"], as_index=False)
+                .groupby(["horse_id", "horse_name", "stable_name", "bloodline", "stars", "speed_stars", "sprint_stars", "endurance_stars"], as_index=False)
                 .agg(last_race_date=('race_date', 'max'), total_races=('race_id', 'count'))
             )
     
+            st.markdown(f"**Total Horses Matching Filter:** {len(latest_races)}")
             st.dataframe(latest_races.sort_values("last_race_date", ascending=False).style.format({
                 "last_race_date": lambda d: d.strftime("%Y-%m-%d %H:%M"),
                 "total_races": "{:,}"
             }))
+    
 
 
 
