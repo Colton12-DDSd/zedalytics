@@ -440,7 +440,7 @@ def main():
                 recent_df = apply_comparator(recent_df, "endurance_stars", endurance_op, selected_endurance)
 
             # 🔁 Gen0 Toggle
-            gen0_only = st.checkbox("Gen0 Only (First Race Before May 2, 2025)")
+            gen0_only = st.checkbox("Gen0 Only (First Race Before May 1, 2025)")
             
             if gen0_only:
                 # Determine the first race date for each horse using the full dataset
@@ -451,7 +451,7 @@ def main():
                 )
             
                 # Define the cutoff date for Gen0 horses
-                cutoff = pd.Timestamp("2025-05-02", tz='UTC')
+                cutoff = pd.Timestamp("2025-05-01", tz='UTC')
             
                 # Identify horse_ids with a first race before the cutoff
                 gen0_ids = first_races[first_races['first_race'] < cutoff]['horse_id']
