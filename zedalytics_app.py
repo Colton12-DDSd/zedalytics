@@ -369,49 +369,58 @@ def main():
         if recent_df.empty:
             st.info("No races found in the last 24 hours.")
         else:
-            # Fill missing star ratings with "Unknown"
+            # Fill missing rating values with -1 for logic
             recent_df[['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']] = (
-                recent_df[['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']].fillna("Unknown")
+                recent_df[['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']].fillna(-1)
             )
-            
-            # Then rename for UI
+    
+            # Rename for UI clarity
             recent_df.rename(columns={
                 "rating": "stars",
                 "speed_rating": "speed_stars",
                 "sprint_rating": "sprint_stars",
                 "endurance_rating": "endurance_stars"
             }, inplace=True)
-
     
-            # Dropdown filters
+            def format_dropdown_options(series):
+                return ["All"] + [
+                    "Unknown" if val == -1 else val
+                    for val in sorted(series.unique())
+                ]
+    
+            # Dropdown filters with UI relabeling
             bloodlines = ["All"] + sorted(recent_df['bloodline'].dropna().unique())
             selected_bloodline = st.selectbox("Filter by Bloodline:", bloodlines)
     
-            stars = ["All"] + sorted(recent_df['stars'].dropna().unique())
+            stars = format_dropdown_options(recent_df['stars'])
             selected_stars = st.selectbox("Filter by Overall Stars:", stars)
     
-            speed_stars = ["All"] + sorted(recent_df['speed_stars'].dropna().unique())
+            speed_stars = format_dropdown_options(recent_df['speed_stars'])
             selected_speed = st.selectbox("Filter by Speed Stars:", speed_stars)
     
-            sprint_stars = ["All"] + sorted(recent_df['sprint_stars'].dropna().unique())
+            sprint_stars = format_dropdown_options(recent_df['sprint_stars'])
             selected_sprint = st.selectbox("Filter by Sprint Stars:", sprint_stars)
     
-            endurance_stars = ["All"] + sorted(recent_df['endurance_stars'].dropna().unique())
+            endurance_stars = format_dropdown_options(recent_df['endurance_stars'])
             selected_endurance = st.selectbox("Filter by Endurance Stars:", endurance_stars)
+    
+            # Convert "Unknown" back to -1 for filtering
+            def decode(val):
+                return -1 if val == "Unknown" else val
     
             # Apply filters
             if selected_bloodline != "All":
                 recent_df = recent_df[recent_df['bloodline'] == selected_bloodline]
             if selected_stars != "All":
-                recent_df = recent_df[recent_df['stars'] == selected_stars]
+                recent_df = recent_df[recent_df['stars'] == decode(selected_stars)]
             if selected_speed != "All":
-                recent_df = recent_df[recent_df['speed_stars'] == selected_speed]
+                recent_df = recent_df[recent_df['speed_stars'] == decode(selected_speed)]
             if selected_sprint != "All":
-                recent_df = recent_df[recent_df['sprint_stars'] == selected_sprint]
+                recent_df = recent_df[recent_df['sprint_stars'] == decode(selected_sprint)]
             if selected_endurance != "All":
-                recent_df = recent_df[recent_df['endurance_stars'] == selected_endurance]
+                recent_df = recent_df[recent_df['endurance_stars'] == decode(selected_endurance)]
     
-            # Aggregate latest race per horse
+            # Group latest race per horse
             latest_races = (
                 recent_df.sort_values("race_date", ascending=False)
                 .groupby(["horse_id", "horse_name", "stable_name", "bloodline", "stars", "speed_stars", "sprint_stars", "endurance_stars"], as_index=False)
@@ -420,13 +429,9 @@ def main():
     
             st.markdown(f"**Total Horses Matching Filter:** {len(latest_races)}")
             st.dataframe(latest_races.sort_values("last_race_date", ascending=False).style.format({
-                "last_race_date": lambda d: d.strftime("%Y-%m-%d %H:%M"),
+                "last_race_date": lambda d: d.strftime("%Y-%m-%d %H:%M") if not pd.isnull(d) else "",
                 "total_races": "{:,}"
             }))
-    
-
-
-
 
 if __name__ == "__main__":
     main()
