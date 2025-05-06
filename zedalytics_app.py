@@ -440,17 +440,25 @@ def main():
                 recent_df = apply_comparator(recent_df, "endurance_stars", endurance_op, selected_endurance)
 
             # 🔁 Gen0 Toggle
-            gen0_only = st.checkbox("Gen0 Only (First Race Before 2nd of This Month)")
+            gen0_only = st.checkbox("Gen0 Only (First Race Before May 2, 2025)")
             
             if gen0_only:
+                # Determine the first race date for each horse using the full dataset
                 first_races = (
-                    recent_df.sort_values("race_date")
+                    df.sort_values("race_date")
                     .groupby("horse_id", as_index=False)
                     .agg(first_race=('race_date', 'min'))
                 )
-                cutoff = pd.Timestamp.now(tz='UTC').replace(day=2, hour=0, minute=0, second=0, microsecond=0)
+            
+                # Define the cutoff date for Gen0 horses
+                cutoff = pd.Timestamp("2025-05-02", tz='UTC')
+            
+                # Identify horse_ids with a first race before the cutoff
                 gen0_ids = first_races[first_races['first_race'] < cutoff]['horse_id']
+            
+                # Filter the recent_df to include only Gen0 horses
                 recent_df = recent_df[recent_df['horse_id'].isin(gen0_ids)]
+
     
             # Aggregate latest race per horse
             latest_races = (
