@@ -372,7 +372,7 @@ def main():
             # Fill missing rating-related columns BEFORE renaming
             for col in ['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']:
                 if col not in recent_df.columns:
-                    recent_df[col] = np.nan  # fallback in case column is missing entirely
+                    recent_df[col] = np.nan  # fallback
                 recent_df[col] = recent_df[col].fillna(-1)
     
             # Rename for filtering/UI
@@ -383,7 +383,7 @@ def main():
                 "endurance_rating": "endurance_stars"
             }, inplace=True)
     
-            # Helper: format dropdown values with "Unknown" and safe sorting
+            # Helper: format dropdown values with "Unknown"
             def get_dropdown_options(col):
                 vals = recent_df[col].unique()
                 formatted = ["Unknown" if v == -1 else str(v) for v in vals]
@@ -402,11 +402,9 @@ def main():
             selected_sprint = st.selectbox("Filter by Sprint Stars:", get_dropdown_options("sprint_stars"))
             selected_endurance = st.selectbox("Filter by Endurance Stars:", get_dropdown_options("endurance_stars"))
     
-            # Helper to decode
             def decode(val):
                 return -1 if val == "Unknown" else float(val)
     
-            # Apply filters
             if selected_bloodline != "All":
                 recent_df = recent_df[recent_df['bloodline'] == selected_bloodline]
             if selected_stars != "All":
@@ -418,18 +416,26 @@ def main():
             if selected_endurance != "All":
                 recent_df = recent_df[recent_df['endurance_stars'] == decode(selected_endurance)]
     
-            # Final grouped result
             latest_races = (
                 recent_df.sort_values("race_date", ascending=False)
-                .groupby(["horse_id", "horse_name", "stable_name", "bloodline", "stars", "speed_stars", "sprint_stars", "endurance_stars"], as_index=False)
+                .groupby(
+                    ["horse_id", "horse_name", "stable_name", "bloodline", "stars", "speed_stars", "sprint_stars", "endurance_stars"],
+                    as_index=False
+                )
                 .agg(last_race_date=('race_date', 'max'), total_races=('race_id', 'count'))
             )
-    
-            st.markdown(f"**Total Horses Matching Filter:** {len(latest_races)}")
-            st.dataframe(latest_races.sort_values("last_race_date", ascending=False).style.format({
+
+            # 🔄 Format display to replace -1 with "Unknown"
+            display_df = latest_races.copy()
+            for col in ['stars', 'speed_stars', 'sprint_stars', 'endurance_stars']:
+                display_df[col] = display_df[col].apply(lambda x: "Unknown" if x == -1 else x)
+
+            st.markdown(f"**Total Horses Matching Filter:** {len(display_df)}")
+            st.dataframe(display_df.sort_values("last_race_date", ascending=False).style.format({
                 "last_race_date": lambda d: d.strftime("%Y-%m-%d %H:%M") if not pd.isnull(d) else "",
                 "total_races": "{:,}"
             }))
+
 
 if __name__ == "__main__":
     main()
