@@ -1,5 +1,5 @@
 # zedalytics_app.py
-
+from horse_detail import render_horse_detail
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -144,29 +144,17 @@ def main():
     with tab1:
         st.subheader("🏆 Top Horses by Current Balance")
         balance_df = df.groupby(['horse_id', 'horse_name'], as_index=False)['profit_loss'].sum()
-        top_balance = balance_df.sort_values('profit_loss', ascending=False).head(5)
-    
-        # Initialize accordion tracker
-        if "active_horse_id" not in st.session_state:
-            st.session_state["active_horse_id"] = None
+        top_balance = balance_df.sort_values('profit_loss', ascending=False).head(10)
     
         for _, row in top_balance.iterrows():
             with st.container():
                 horse_id = row['horse_id']
-                is_active = st.session_state["active_horse_id"] == horse_id
+                horse_name = row['horse_name']
+                profit = int(row['profit_loss'])
     
-                st.markdown(f"**{row['horse_name']}** — Balance: {int(row['profit_loss']):,} ZED")
-    
-                clicked = st.button("Hide Stats" if is_active else "View Stats", key="btn_" + horse_id)
-    
-                if clicked:
-                    # If already open, close it; otherwise, open the new one
-                    st.session_state["active_horse_id"] = None if is_active else horse_id
-    
-                # Show dashboard if active horse is selected (after state update)
-                if st.session_state["active_horse_id"] == horse_id:
-                    horse_df = df[df['horse_id'] == horse_id].sort_values('race_date')
-                    show_horse_dashboard(horse_df, df)
+                st.markdown(f"**{horse_name}** — Balance: {profit:,} ZED")
+                detail_url = f"?horse_id={horse_id}"
+                st.markdown(f"[➡️ More Stats]({detail_url})", unsafe_allow_html=True)
     
         st.subheader("🔎 Search Horse by ID or Name")
         user_input = st.text_input("Enter Horse ID or Name:", key="horse_search")
@@ -187,6 +175,7 @@ def main():
                 return
     
             show_horse_dashboard(horse_df, df)
+
 
 
 
@@ -341,3 +330,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+query_params = st.experimental_get_query_params()
+if "horse_id" in query_params:
+    horse_id = query_params["horse_id"][0]
+    render_horse_detail(horse_id, df, show_horse_dashboard)
+    return  # Stop rendering rest of the page
+
