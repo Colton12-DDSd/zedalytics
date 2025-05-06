@@ -159,9 +159,21 @@ def main():
                 horse_name = row['horse_name']
                 profit = int(row['profit_loss'])
     
-                st.markdown(f"**{horse_name}** — Balance: {profit:,} ZED")
-                detail_url = f"?horse_id={horse_id}"
-                st.markdown(f"[➡️ More Stats]({detail_url})", unsafe_allow_html=True)
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.markdown(f"**{horse_name}** — Balance: {profit:,} ZED")
+                with col2:
+                    detail_url = f"?horse_id={horse_id}"
+                    st.markdown(
+                        f"""
+                        <a href="{detail_url}" target="_blank">
+                            <button style="margin-top: 0.25em; padding: 0.4em 0.8em; font-size: 14px;">📊 More Stats</button>
+                        </a>
+                        """,
+                        unsafe_allow_html=True
+                    )
+    
+        st.divider()
     
         st.subheader("🔎 Search Horse by ID or Name")
         user_input = st.text_input("Enter Horse ID or Name:", key="horse_search")
