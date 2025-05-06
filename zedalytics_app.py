@@ -338,9 +338,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-query_params = st.experimental_get_query_params()
-if "horse_id" in query_params:
-    horse_id = query_params["horse_id"][0]
-    render_horse_detail(horse_id, df, show_horse_dashboard)
-    return  # Stop rendering rest of the page
-
