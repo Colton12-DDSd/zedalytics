@@ -133,10 +133,17 @@ def main():
 
     df = load_data()
     df['augment_combo'] = (
-    df['cpu_augment'].fillna('') + ' | ' +
-    df['ram_augment'].fillna('') + ' | ' +
-    df['hydraulic_augment'].fillna('')
-)
+        df['cpu_augment'].fillna('') + ' | ' +
+        df['ram_augment'].fillna('') + ' | ' +
+        df['hydraulic_augment'].fillna('')
+    )
+
+    # ✅ Now that df is defined, we can safely check query params
+    query_params = st.experimental_get_query_params()
+    if "horse_id" in query_params:
+        horse_id = query_params["horse_id"][0]
+        render_horse_detail(horse_id, df, show_horse_dashboard)
+        st.stop()
 
 
     tab1, tab2, tab3, tab4 = st.tabs(["🏇 Horses", "🏠 Stables", "⚙️ Augments", "🥇 Leaderboard"])
