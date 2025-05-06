@@ -147,7 +147,14 @@ def main():
 
 
 
-    tab1, tab2, tab3, tab4 = st.tabs(["🏇 Horses", "🏠 Stables", "⚙️ Augments", "🥇 Leaderboard"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "🐎 Horses", 
+        "🏠 Stables", 
+        "⚙️ Augments", 
+        "🥇 Leaderboard", 
+        "🏇 Active Racers"
+    ])
+
 
     with tab1:
         st.subheader("🏆 Top Horses by Current Balance")
@@ -352,6 +359,42 @@ def main():
         )
         top_earners = earners[earners['races'] >= 3].sort_values('total_earnings', ascending=False).head(10)
         st.dataframe(top_earners[['horse_name', 'stable_name', 'augment_combo', 'races', 'total_earnings']].style.format({'total_earnings': '{:,.0f} ZED'}))
+
+    with tab5:
+        st.subheader("Recently Active Horses (Last 24 Hours)")
+    
+        now = pd.Timestamp.now(tz='UTC')
+        recent_df = df[df['race_date'] >= now - pd.Timedelta(hours=24)].copy()
+    
+        if recent_df.empty:
+            st.info("No races found in the last 24 hours.")
+        else:
+            # Dropdowns for filtering
+            bloodlines = ["All"] + sorted(recent_df['bloodline'].dropna().unique())
+            selected_bloodline = st.selectbox("Filter by Bloodline:", bloodlines)
+    
+            stars = ["All"] + sorted(recent_df['stars'].dropna().unique())
+            selected_stars = st.selectbox("Filter by Star Rating:", stars)
+    
+            # Apply filters
+            if selected_bloodline != "All":
+                recent_df = recent_df[recent_df['bloodline'] == selected_bloodline]
+    
+            if selected_stars != "All":
+                recent_df = recent_df[recent_df['stars'] == selected_stars]
+    
+            # Aggregate most recent race per horse
+            latest_races = (
+                recent_df.sort_values("race_date", ascending=False)
+                .groupby(["horse_id", "horse_name", "stable_name", "bloodline", "stars"], as_index=False)
+                .agg(last_race_date=('race_date', 'max'), total_races=('race_id', 'count'))
+            )
+    
+            st.dataframe(latest_races.sort_values("last_race_date", ascending=False).style.format({
+                "last_race_date": lambda d: d.strftime("%Y-%m-%d %H:%M"),
+                "total_races": "{:,}"
+            }))
+
 
 
 if __name__ == "__main__":
