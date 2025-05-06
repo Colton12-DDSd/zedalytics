@@ -376,7 +376,6 @@ def main():
                     recent_df[col] = np.nan
                 recent_df[col] = recent_df[col].fillna(-1)
     
-            # Rename for UI
             recent_df.rename(columns={
                 "rating": "stars",
                 "speed_rating": "speed_stars",
@@ -384,6 +383,7 @@ def main():
                 "endurance_rating": "endurance_stars"
             }, inplace=True)
     
+            # Dropdown helper
             def get_dropdown_options(col):
                 vals = recent_df[col].unique()
                 formatted = ["Unknown" if v == -1 else str(v) for v in vals]
@@ -399,7 +399,7 @@ def main():
             def apply_comparator(df, col, op, val):
                 val = decode(val)
                 if val == -1:
-                    return df  # don't filter on "Unknown"
+                    return df
                 if op == ">=":
                     return df[df[col] >= val]
                 elif op == "<=":
@@ -411,7 +411,7 @@ def main():
             bloodlines = ["All"] + sorted(recent_df['bloodline'].dropna().unique())
             selected_bloodline = st.selectbox("Filter by Bloodline:", bloodlines)
     
-            # Star filters with operator toggles
+            # Star filters
             st.markdown("### Star Rating Filters")
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -427,6 +427,9 @@ def main():
             endurance_op = st.selectbox("Endurance Stars Operator", [">=", "=", "<="], key="endur_op")
             selected_endurance = st.selectbox("Endurance Stars", get_dropdown_options("endurance_stars"), key="endur_val")
     
+            # Gen0 toggle
+            gen0_only = st.checkbox("Gen0 Only (First Race Before May 1, 2025)")
+    
             # Apply filters
             if selected_bloodline != "All":
                 recent_df = recent_df[recent_df['bloodline'] == selected_bloodline]
@@ -438,36 +441,33 @@ def main():
                 recent_df = apply_comparator(recent_df, "sprint_stars", sprint_op, selected_sprint)
             if selected_endurance != "All":
                 recent_df = apply_comparator(recent_df, "endurance_stars", endurance_op, selected_endurance)
-
-            # 🔁 Gen0 Toggle
-            gen0_only = st.checkbox("Gen0 Only (First Race Before May 1, 2025)")
-            
+    
             if gen0_only:
-                # Determine the first race date for each horse using the full dataset
                 first_races = (
                     df.sort_values("race_date")
                     .groupby("horse_id", as_index=False)
                     .agg(first_race=('race_date', 'min'))
                 )
-            
-                # Define the cutoff date for Gen0 horses
                 cutoff = pd.Timestamp("2025-05-01", tz='UTC')
-            
-                # Identify horse_ids with a first race before the cutoff
                 gen0_ids = first_races[first_races['first_race'] < cutoff]['horse_id']
-            
-                # Filter the recent_df to include only Gen0 horses
                 recent_df = recent_df[recent_df['horse_id'].isin(gen0_ids)]
-
     
-            # Aggregate latest race per horse
+            # Latest race per horse from recent_df
             latest_races = (
                 recent_df.sort_values("race_date", ascending=False)
                 .groupby(["horse_id", "horse_name", "stable_name", "bloodline", "stars", "speed_stars", "sprint_stars", "endurance_stars"], as_index=False)
-                .agg(last_race_date=('race_date', 'max'), total_races=('race_id', 'count'))
+                .agg(last_race_date=('race_date', 'max'))
             )
     
-            # Replace -1 with "Unknown" for display
+            # Get total races from full df
+            lifetime_counts = (
+                df.groupby("horse_id", as_index=False)
+                .agg(total_races=('race_id', 'count'))
+            )
+    
+            latest_races = latest_races.merge(lifetime_counts, on="horse_id", how="left")
+    
+            # Replace -1 with "Unknown"
             display_df = latest_races.copy()
             for col in ['stars', 'speed_stars', 'sprint_stars', 'endurance_stars']:
                 display_df[col] = display_df[col].apply(lambda x: "Unknown" if x == -1 else x)
@@ -477,6 +477,7 @@ def main():
                 "last_race_date": lambda d: d.strftime("%Y-%m-%d %H:%M") if not pd.isnull(d) else "",
                 "total_races": "{:,}"
             }))
+
             
 if __name__ == "__main__":
     main()
