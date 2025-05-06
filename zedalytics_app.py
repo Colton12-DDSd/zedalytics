@@ -369,7 +369,7 @@ def main():
         if recent_df.empty:
             st.info("No races found in the last 24 hours.")
         else:
-            # Fill missing rating values with -1 for logic
+            # Fill NaNs with -1 for filtering logic
             recent_df[['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']] = (
                 recent_df[['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']].fillna(-1)
             )
@@ -382,13 +382,18 @@ def main():
                 "endurance_rating": "endurance_stars"
             }, inplace=True)
     
+            # --- Dropdown Option Formatter ---
             def format_dropdown_options(series):
-                return ["All"] + [
-                    "Unknown" if val == -1 else val
-                    for val in sorted(series.unique())
-                ]
+                unique_vals = series.dropna().unique()
+                formatted = ["Unknown" if val == -1 else str(val) for val in unique_vals]
+                try:
+                    # Try to sort numerically but treat "Unknown" as lowest
+                    sorted_vals = sorted([v for v in formatted if v != "Unknown"], key=lambda x: float(x))
+                    return ["All", "Unknown"] + sorted_vals
+                except:
+                    return ["All"] + sorted(formatted)
     
-            # Dropdown filters with UI relabeling
+            # Filters
             bloodlines = ["All"] + sorted(recent_df['bloodline'].dropna().unique())
             selected_bloodline = st.selectbox("Filter by Bloodline:", bloodlines)
     
@@ -404,9 +409,9 @@ def main():
             endurance_stars = format_dropdown_options(recent_df['endurance_stars'])
             selected_endurance = st.selectbox("Filter by Endurance Stars:", endurance_stars)
     
-            # Convert "Unknown" back to -1 for filtering
+            # Helper to decode back to -1
             def decode(val):
-                return -1 if val == "Unknown" else val
+                return -1 if val == "Unknown" else float(val)
     
             # Apply filters
             if selected_bloodline != "All":
@@ -420,7 +425,7 @@ def main():
             if selected_endurance != "All":
                 recent_df = recent_df[recent_df['endurance_stars'] == decode(selected_endurance)]
     
-            # Group latest race per horse
+            # Show most recent race per horse
             latest_races = (
                 recent_df.sort_values("race_date", ascending=False)
                 .groupby(["horse_id", "horse_name", "stable_name", "bloodline", "stars", "speed_stars", "sprint_stars", "endurance_stars"], as_index=False)
