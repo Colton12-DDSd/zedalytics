@@ -141,9 +141,10 @@ def main():
     # ✅ Now that df is defined, we can safely check query params
     query_params = st.query_params
     if "horse_id" in query_params:
-        horse_id = query_params["horse_id"][0]
+        horse_id = query_params["horse_id"]  # <- ✅ no [0] needed
         render_horse_detail(horse_id, df, show_horse_dashboard)
         st.stop()
+
 
 
     tab1, tab2, tab3, tab4 = st.tabs(["🏇 Horses", "🏠 Stables", "⚙️ Augments", "🥇 Leaderboard"])
