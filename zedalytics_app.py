@@ -324,8 +324,14 @@ def main():
     
         # 🕒 Fastest Single Race Times
         st.markdown("### ⚡ Fastest Single Race Times")
-        fastest_races = df[['horse_name', 'stable_name', 'augment_combo', 'finish_time']].sort_values('finish_time').head(10)
-        st.dataframe(fastest_races.style.format({'finish_time': '{:.2f}'}))
+        fastest_races = df[['horse_name', 'stable_name', 'augment_combo', 'finish_time', 'race_date']].sort_values('finish_time').head(10)
+        st.dataframe(
+            fastest_races.style.format({
+                'finish_time': '{:.2f}',
+                'race_date': lambda d: d.strftime('%Y-%m-%d')
+            })
+        )
+
     
         # 🏁 Fastest Average Horses (Min 3 races)
         st.markdown("### 🚀 Fastest Average Horses (Min. 3 Races)")
