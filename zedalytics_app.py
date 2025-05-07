@@ -432,7 +432,7 @@ def main():
             with col3:
                 sprint_op = toggle_operator("Sprint", "sprint_op")
                 sprint_val = st.slider("Sprint Stars", 0.0, 5.0, 0.0, 0.5)
-             with col4:
+            with col4:
                 endurance_op = toggle_operator("Endurance", "endurance_op")
                 endurance_val = st.slider("Endurance Stars", 0.0, 5.0, 0.0, 0.5)
 
