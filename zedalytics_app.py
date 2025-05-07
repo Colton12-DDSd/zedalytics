@@ -422,7 +422,7 @@ def main():
                     st.session_state[key] = next_op
                 return st.session_state.get(key, "≥")
             
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
             with col1:
                 stars_op = toggle_operator("Overall", "stars_op")
                 stars_val = st.slider("Overall Stars", 0.0, 5.0, 0.0, 0.5)
@@ -432,9 +432,9 @@ def main():
             with col3:
                 sprint_op = toggle_operator("Sprint", "sprint_op")
                 sprint_val = st.slider("Sprint Stars", 0.0, 5.0, 0.0, 0.5)
-            
-            endurance_op = toggle_operator("Endurance", "endurance_op")
-            endurance_val = st.slider("Endurance Stars", 0.0, 5.0, 0.0, 0.5)
+             with col4:
+                endurance_op = toggle_operator("Endurance", "endurance_op")
+                endurance_val = st.slider("Endurance Stars", 0.0, 5.0, 0.0, 0.5)
 
     
             # Gen0 toggle
