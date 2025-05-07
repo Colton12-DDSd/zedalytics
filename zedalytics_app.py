@@ -441,16 +441,15 @@ def main():
             gen0_only = st.checkbox("Gen0 Only (First Race Before May 1, 2025)")
     
             # Apply filters
-            if selected_bloodline != "All":
-                recent_df = recent_df[recent_df['bloodline'] == selected_bloodline]
-            if selected_stars != "All":
-                recent_df = apply_comparator(recent_df, "stars", stars_op, selected_stars)
-            if selected_speed != "All":
-                recent_df = apply_comparator(recent_df, "speed_stars", speed_op, selected_speed)
-            if selected_sprint != "All":
-                recent_df = apply_comparator(recent_df, "sprint_stars", sprint_op, selected_sprint)
-            if selected_endurance != "All":
-                recent_df = apply_comparator(recent_df, "endurance_stars", endurance_op, selected_endurance)
+            if stars_val > 0.0:
+                recent_df = apply_comparator(recent_df, "stars", stars_op, stars_val)
+            if speed_val > 0.0:
+                recent_df = apply_comparator(recent_df, "speed_stars", speed_op, speed_val)
+            if sprint_val > 0.0:
+                recent_df = apply_comparator(recent_df, "sprint_stars", sprint_op, sprint_val)
+            if endurance_val > 0.0:
+                recent_df = apply_comparator(recent_df, "endurance_stars", endurance_op, endurance_val)
+
     
             if gen0_only:
                 first_races = (
