@@ -361,99 +361,99 @@ def main():
         top_earners = earners[earners['races'] >= 3].sort_values('total_earnings', ascending=False).head(10)
         st.dataframe(top_earners[['horse_name', 'stable_name', 'augment_combo', 'races', 'total_earnings']].style.format({'total_earnings': '{:,.0f} ZED'}))
 
-with tab5:
-    st.subheader("Recently Active Horses (Last 24 Hours)")
-
-    now = pd.Timestamp.now(tz='UTC')
-    recent_df = df[df['race_date'] >= now - pd.Timedelta(hours=24)].copy()
-
-    if recent_df.empty:
-        st.info("No races found in the last 24 hours.")
-    else:
-        # Fill missing star values
-        for col in ['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']:
-            if col not in recent_df.columns:
-                recent_df[col] = np.nan
-            recent_df[col] = recent_df[col].fillna(-1)
-
-        recent_df.rename(columns={
-            "rating": "stars",
-            "speed_rating": "speed_stars",
-            "sprint_rating": "sprint_stars",
-            "endurance_rating": "endurance_stars"
-        }, inplace=True)
-
-        def decode_slider(val):
-            return -1 if val == 0.0 else val
-
-        def apply_slider_range(df, col, val_range, include_unknown):
-            lower, upper = val_range
-            mask = (df[col] >= lower) & (df[col] <= upper)
-            if include_unknown:
-                mask = mask | (df[col] == -1)
-            return df[mask]
-
-        bloodlines = ["All"] + sorted(recent_df['bloodline'].dropna().unique())
-        selected_bloodline = st.selectbox("Filter by Bloodline:", bloodlines)
-
-        st.markdown("### Star Rating Filters")
-        col1, col2, col3, col4 = st.columns(4)
-
-        with col1:
-            stars_range = st.slider("Overall Stars", 0.0, 5.0, (0.0, 5.0), 0.5)
-            stars_include_unknown = st.checkbox("Include Unknown", key="stars_unknown")
-        with col2:
-            speed_range = st.slider("Speed Stars", 0.0, 5.0, (0.0, 5.0), 0.5)
-            speed_include_unknown = st.checkbox("Include Unknown", key="speed_unknown")
-        with col3:
-            sprint_range = st.slider("Sprint Stars", 0.0, 5.0, (0.0, 5.0), 0.5)
-            sprint_include_unknown = st.checkbox("Include Unknown", key="sprint_unknown")
-        with col4:
-            endurance_range = st.slider("Endurance Stars", 0.0, 5.0, (0.0, 5.0), 0.5)
-            endurance_include_unknown = st.checkbox("Include Unknown", key="endurance_unknown")
-
-        gen0_only = st.checkbox("Gen0 Only (First Race Before May 1, 2025)")
-
-        # Apply filters
-        if selected_bloodline != "All":
-            recent_df = recent_df[recent_df['bloodline'] == selected_bloodline]
-        recent_df = apply_slider_range(recent_df, "stars", stars_range, stars_include_unknown)
-        recent_df = apply_slider_range(recent_df, "speed_stars", speed_range, speed_include_unknown)
-        recent_df = apply_slider_range(recent_df, "sprint_stars", sprint_range, sprint_include_unknown)
-        recent_df = apply_slider_range(recent_df, "endurance_stars", endurance_range, endurance_include_unknown)
-
-        if gen0_only:
-            first_races = (
-                df.sort_values("race_date")
-                .groupby("horse_id", as_index=False)
-                .agg(first_race=('race_date', 'min'))
+    with tab5:
+        st.subheader("Recently Active Horses (Last 24 Hours)")
+    
+        now = pd.Timestamp.now(tz='UTC')
+        recent_df = df[df['race_date'] >= now - pd.Timedelta(hours=24)].copy()
+    
+        if recent_df.empty:
+            st.info("No races found in the last 24 hours.")
+        else:
+            # Fill missing star values
+            for col in ['rating', 'speed_rating', 'sprint_rating', 'endurance_rating']:
+                if col not in recent_df.columns:
+                    recent_df[col] = np.nan
+                recent_df[col] = recent_df[col].fillna(-1)
+    
+            recent_df.rename(columns={
+                "rating": "stars",
+                "speed_rating": "speed_stars",
+                "sprint_rating": "sprint_stars",
+                "endurance_rating": "endurance_stars"
+            }, inplace=True)
+    
+            def decode_slider(val):
+                return -1 if val == 0.0 else val
+    
+            def apply_slider_range(df, col, val_range, include_unknown):
+                lower, upper = val_range
+                mask = (df[col] >= lower) & (df[col] <= upper)
+                if include_unknown:
+                    mask = mask | (df[col] == -1)
+                return df[mask]
+    
+            bloodlines = ["All"] + sorted(recent_df['bloodline'].dropna().unique())
+            selected_bloodline = st.selectbox("Filter by Bloodline:", bloodlines)
+    
+            st.markdown("### Star Rating Filters")
+            col1, col2, col3, col4 = st.columns(4)
+    
+            with col1:
+                stars_range = st.slider("Overall Stars", 0.0, 5.0, (0.0, 5.0), 0.5)
+                stars_include_unknown = st.checkbox("Include Unknown", key="stars_unknown")
+            with col2:
+                speed_range = st.slider("Speed Stars", 0.0, 5.0, (0.0, 5.0), 0.5)
+                speed_include_unknown = st.checkbox("Include Unknown", key="speed_unknown")
+            with col3:
+                sprint_range = st.slider("Sprint Stars", 0.0, 5.0, (0.0, 5.0), 0.5)
+                sprint_include_unknown = st.checkbox("Include Unknown", key="sprint_unknown")
+            with col4:
+                endurance_range = st.slider("Endurance Stars", 0.0, 5.0, (0.0, 5.0), 0.5)
+                endurance_include_unknown = st.checkbox("Include Unknown", key="endurance_unknown")
+    
+            gen0_only = st.checkbox("Gen0 Only (First Race Before May 1, 2025)")
+    
+            # Apply filters
+            if selected_bloodline != "All":
+                recent_df = recent_df[recent_df['bloodline'] == selected_bloodline]
+            recent_df = apply_slider_range(recent_df, "stars", stars_range, stars_include_unknown)
+            recent_df = apply_slider_range(recent_df, "speed_stars", speed_range, speed_include_unknown)
+            recent_df = apply_slider_range(recent_df, "sprint_stars", sprint_range, sprint_include_unknown)
+            recent_df = apply_slider_range(recent_df, "endurance_stars", endurance_range, endurance_include_unknown)
+    
+            if gen0_only:
+                first_races = (
+                    df.sort_values("race_date")
+                    .groupby("horse_id", as_index=False)
+                    .agg(first_race=('race_date', 'min'))
+                )
+                cutoff = pd.Timestamp("2025-05-01", tz='UTC')
+                gen0_ids = first_races[first_races['first_race'] < cutoff]['horse_id']
+                recent_df = recent_df[recent_df['horse_id'].isin(gen0_ids)]
+    
+            latest_races = (
+                recent_df.sort_values("race_date", ascending=False)
+                .groupby(["horse_id", "horse_name", "stable_name", "bloodline", "stars", "speed_stars", "sprint_stars", "endurance_stars"], as_index=False)
+                .agg(last_race_date=('race_date', 'max'))
             )
-            cutoff = pd.Timestamp("2025-05-01", tz='UTC')
-            gen0_ids = first_races[first_races['first_race'] < cutoff]['horse_id']
-            recent_df = recent_df[recent_df['horse_id'].isin(gen0_ids)]
-
-        latest_races = (
-            recent_df.sort_values("race_date", ascending=False)
-            .groupby(["horse_id", "horse_name", "stable_name", "bloodline", "stars", "speed_stars", "sprint_stars", "endurance_stars"], as_index=False)
-            .agg(last_race_date=('race_date', 'max'))
-        )
-
-        lifetime_counts = (
-            df.groupby("horse_id", as_index=False)
-            .agg(total_races=('race_id', 'count'))
-        )
-
-        latest_races = latest_races.merge(lifetime_counts, on="horse_id", how="left")
-
-        display_df = latest_races.copy()
-        for col in ['stars', 'speed_stars', 'sprint_stars', 'endurance_stars']:
-            display_df[col] = display_df[col].apply(lambda x: "Unknown" if x == -1 else x)
-
-        st.markdown(f"**Total Horses Matching Filter:** {len(display_df)}")
-        st.dataframe(display_df.sort_values("last_race_date", ascending=False).style.format({
-            "last_race_date": lambda d: d.strftime("%Y-%m-%d %H:%M") if not pd.isnull(d) else "",
-            "total_races": "{:,}"
-        }))
+    
+            lifetime_counts = (
+                df.groupby("horse_id", as_index=False)
+                .agg(total_races=('race_id', 'count'))
+            )
+    
+            latest_races = latest_races.merge(lifetime_counts, on="horse_id", how="left")
+    
+            display_df = latest_races.copy()
+            for col in ['stars', 'speed_stars', 'sprint_stars', 'endurance_stars']:
+                display_df[col] = display_df[col].apply(lambda x: "Unknown" if x == -1 else x)
+    
+            st.markdown(f"**Total Horses Matching Filter:** {len(display_df)}")
+            st.dataframe(display_df.sort_values("last_race_date", ascending=False).style.format({
+                "last_race_date": lambda d: d.strftime("%Y-%m-%d %H:%M") if not pd.isnull(d) else "",
+                "total_races": "{:,}"
+            }))
 
             
 if __name__ == "__main__":
