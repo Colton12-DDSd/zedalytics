@@ -411,21 +411,31 @@ def main():
             bloodlines = ["All"] + sorted(recent_df['bloodline'].dropna().unique())
             selected_bloodline = st.selectbox("Filter by Bloodline:", bloodlines)
     
-            # Star filters
+            # Star filters with sliders and operator toggles
             st.markdown("### Star Rating Filters")
+            
+            def toggle_operator(label, key):
+                ops = ["≥", "=", "≤"]
+                current = st.session_state.get(key, "≥")
+                next_op = ops[(ops.index(current) + 1) % len(ops)]
+                if st.button(f"{label} {current}", key=f"{key}_btn"):
+                    st.session_state[key] = next_op
+                return st.session_state.get(key, "≥")
+            
             col1, col2, col3 = st.columns(3)
             with col1:
-                stars_op = st.selectbox("Overall Stars Operator", [">=", "=", "<="], key="stars_op")
-                selected_stars = st.selectbox("Overall Stars", get_dropdown_options("stars"), key="stars_val")
+                stars_op = toggle_operator("Overall", "stars_op")
+                stars_val = st.slider("Overall Stars", 0.0, 5.0, 0.0, 0.5)
             with col2:
-                speed_op = st.selectbox("Speed Stars Operator", [">=", "=", "<="], key="speed_op")
-                selected_speed = st.selectbox("Speed Stars", get_dropdown_options("speed_stars"), key="speed_val")
+                speed_op = toggle_operator("Speed", "speed_op")
+                speed_val = st.slider("Speed Stars", 0.0, 5.0, 0.0, 0.5)
             with col3:
-                sprint_op = st.selectbox("Sprint Stars Operator", [">=", "=", "<="], key="sprint_op")
-                selected_sprint = st.selectbox("Sprint Stars", get_dropdown_options("sprint_stars"), key="sprint_val")
-    
-            endurance_op = st.selectbox("Endurance Stars Operator", [">=", "=", "<="], key="endur_op")
-            selected_endurance = st.selectbox("Endurance Stars", get_dropdown_options("endurance_stars"), key="endur_val")
+                sprint_op = toggle_operator("Sprint", "sprint_op")
+                sprint_val = st.slider("Sprint Stars", 0.0, 5.0, 0.0, 0.5)
+            
+            endurance_op = toggle_operator("Endurance", "endurance_op")
+            endurance_val = st.slider("Endurance Stars", 0.0, 5.0, 0.0, 0.5)
+
     
             # Gen0 toggle
             gen0_only = st.checkbox("Gen0 Only (First Race Before May 1, 2025)")
