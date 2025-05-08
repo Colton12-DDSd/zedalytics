@@ -1,29 +1,68 @@
 import streamlit as st
 import pandas as pd
 
-# You can reuse the same CSV source
+# URL to race data
 CSV_URL = 'https://raw.githubusercontent.com/myblood-tempest/zed-champions-race-data/main/race_results.csv'
 
 @st.cache_data(ttl=600)
 def load_data():
     df = pd.read_csv(CSV_URL)
+    df['race_date'] = pd.to_datetime(df['race_date'], errors='coerce')
     return df
 
 def main():
     st.set_page_config(page_title="Stable Dashboard", layout="wide")
-    st.title("📊 Stable Dashboard (Beta)")
-    
+
+    # --- Logo and Title ---
+    st.markdown(
+        """
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <img src="https://raw.githubusercontent.com/Colton12-DDSd/zedalytics/main/ZEDalytics_logo.png" alt="ZEDalytics Logo" style="height: 60px;">
+            <h1 style="margin: 0;">Stable Dashboard</h1>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # --- Load Data ---
     df = load_data()
 
-    st.markdown("""
-    Welcome to the **in-development Stable Dashboard**.
+    # --- Stable Search ---
+    st.subheader("🔍 Search for a Stable")
+    stable_input = st.text_input("Enter Stable Name (case-insensitive):")
 
-    This page will eventually give in-depth stats and analytics for each stable across ZED Champions data.  
-    If you're seeing this — the setup works!
-    """)
+    if not stable_input:
+        st.info("Please enter a stable name to begin.")
+        return
 
-    st.subheader("Preview of Data (First 5 Rows)")
-    st.dataframe(df.head())
+    stable_df = df[df['stable_name'].str.lower() == stable_input.strip().lower()]
+
+    if stable_df.empty:
+        st.warning("No data found for that stable.")
+        return
+
+    # --- Stable Summary Metrics ---
+    st.subheader(f"📊 Overview for Stable: `{stable_input}`")
+
+    total_races = len(stable_df)
+    total_earnings = stable_df['earnings'].sum()
+    total_profit = stable_df['profit_loss'].sum()
+    total_wins = (stable_df['finish_position'] == 1).sum()
+    win_pct = (stable_df['finish_position'] == 1).mean() * 100
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total Races", total_races)
+    col2.metric("Total Wins", total_wins)
+    col3.metric("Win %", f"{win_pct:.2f}%")
+
+    col4, col5 = st.columns(2)
+    col4.metric("Total Earnings", f"{int(total_earnings):,} ZED")
+    col5.metric("Total Profit", f"{int(total_profit):,} ZED")
+
+    st.divider()
+
+    # --- Coming Next ---
+    st.info("✅ Coming next: Horse roster, augment effectiveness, race history, and performance charts.")
 
 if __name__ == "__main__":
     main()
