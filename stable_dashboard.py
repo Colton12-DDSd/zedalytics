@@ -13,15 +13,16 @@ def load_data():
 def main():
     st.set_page_config(page_title="Stable Dashboard", layout="wide")
 
-    # --- Slim Logo and Title ---
+    # --- Top-Aligned Logo ---
     st.markdown(
         """
-        <div style="margin-bottom: 1rem;">
+        <div style="text-align: left; margin-top: -1rem; margin-bottom: 1rem;">
             <img src="https://raw.githubusercontent.com/Colton12-DDSd/zedalytics/main/ZEDalytics_logo_long.png" alt="ZEDalytics Logo" style="height: 45px;">
         </div>
         """,
         unsafe_allow_html=True
     )
+
 
 
     # --- Load Data ---
