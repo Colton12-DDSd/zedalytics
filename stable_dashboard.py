@@ -13,38 +13,16 @@ def load_data():
 def main():
     st.set_page_config(page_title="Stable Dashboard", layout="wide")
 
-    # --- Sticky Header Logo Style ---
+    # --- Top-Aligned Logo ---
     st.markdown(
         """
-        <style>
-        .logo-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            background-color: #0e1117; /* Match dark mode bg */
-            width: 100%;
-            padding: 0.5rem 1rem;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-        }
-    
-        .logo-header img {
-            height: 100px;
-        }
-    
-        .main .block-container {
-            padding-top: 4rem;
-        }
-        </style>
-    
-        <div class="logo-header">
-            <img src="https://raw.githubusercontent.com/Colton12-DDSd/zedalytics/main/ZEDalytics_logo_long.png" alt="ZEDalytics Logo">
+        <div style="text-align: left; margin-top: -1rem; margin-bottom: 1rem;">
+            <img src="https://raw.githubusercontent.com/Colton12-DDSd/zedalytics/main/ZEDalytics_logo_long.png" alt="ZEDalytics Logo" style="height: 90px;">
         </div>
         """,
         unsafe_allow_html=True
     )
+
 
 
 
