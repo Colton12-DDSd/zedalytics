@@ -40,7 +40,7 @@ def main():
 
         # Optional: back to search
         if st.button("🔙 Back to Search"):
-            st.experimental_set_query_params()
+            st.query_params.clear()
             st.rerun()
 
         # Show list of horses
@@ -62,7 +62,7 @@ def main():
             st.warning("No data found for that stable.")
         else:
             # Redirect using query param
-            st.experimental_set_query_params(stable=stable_input.strip())
+            st.query_params["stable"] = stable_input.strip()
             st.rerun()
 
 if __name__ == "__main__":
