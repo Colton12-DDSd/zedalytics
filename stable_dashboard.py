@@ -38,7 +38,9 @@ def main():
 
         st.markdown(
             f"""
-            <h1 style='font-size: 3rem; font-weight: 700; margin-bottom: 1rem;'>{stable_name}</h1>
+            <div style='text-align: center; margin-bottom: 2rem;'>
+                <h1 style='font-size: 4rem; font-weight: 800;'>{stable_name}</h1>
+            </div>
             """,
             unsafe_allow_html=True
         )
