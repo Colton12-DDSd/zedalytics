@@ -57,6 +57,15 @@ def main():
         
         cols = st.columns(4)
         for idx, (_, row) in enumerate(horse_list.iterrows()):
+            horse_id = row["horse_id"]
+            horse_name = row["horse_name"]
+            horse_data = stable_df[stable_df["horse_id"] == horse_id]
+        
+            total_races = len(horse_data)
+            win_pct = (horse_data["finish_position"] == 1).mean() * 100
+            earnings = horse_data["earnings"].sum()
+            profit = horse_data["profit_loss"].sum()
+        
             with cols[idx % 4]:
                 st.markdown(
                     f"""
@@ -67,13 +76,18 @@ def main():
                         margin-bottom: 1rem;
                         box-shadow: 0 0 5px rgba(255,255,255,0.1);
                     '>
-                        <h4 style='margin-bottom: 0.5rem;'>{row['horse_name']}</h4>
-                        <p style='font-size: 0.85rem; color: gray;'>ID: {row['horse_id']}</p>
+                        <h4 style='margin-bottom: 0.5rem;'>{horse_name}</h4>
+                        <p style='font-size: 0.85rem; color: gray; margin-bottom: 0.5rem;'>ID: {horse_id}</p>
+                        <ul style='padding-left: 1.2rem; font-size: 0.9rem;'>
+                            <li><strong>Races:</strong> {total_races}</li>
+                            <li><strong>Win %:</strong> {win_pct:.1f}%</li>
+                            <li><strong>Earnings:</strong> {int(earnings):,} ZED</li>
+                            <li><strong>Profit:</strong> {int(profit):,} ZED</li>
+                        </ul>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
-
 
         return  # don't show the search again
 
