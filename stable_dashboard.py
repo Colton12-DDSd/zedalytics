@@ -36,7 +36,13 @@ def main():
             st.warning(f"No data found for stable '{stable_name}'.")
             return
 
-        st.markdown(f"## 🏠 Stable: **{stable_name}**")
+        st.markdown(
+            f"""
+            <h1 style='font-size: 3rem; font-weight: 700; margin-bottom: 1rem;'>{stable_name}</h1>
+            """,
+            unsafe_allow_html=True
+        )
+
 
         # Optional: back to search
         if st.button("🔙 Back to Search"):
@@ -46,9 +52,26 @@ def main():
         # Show list of horses
         horse_list = stable_df[['horse_name', 'horse_id']].drop_duplicates().sort_values('horse_name')
         st.subheader("📋 Horses in this Stable")
+        
+        cols = st.columns(4)
+        for idx, (_, row) in enumerate(horse_list.iterrows()):
+            with cols[idx % 4]:
+                st.markdown(
+                    f"""
+                    <div style='
+                        background-color: #1e1e1e;
+                        padding: 1rem;
+                        border-radius: 10px;
+                        margin-bottom: 1rem;
+                        box-shadow: 0 0 5px rgba(255,255,255,0.1);
+                    '>
+                        <h4 style='margin-bottom: 0.5rem;'>{row['horse_name']}</h4>
+                        <p style='font-size: 0.85rem; color: gray;'>ID: {row['horse_id']}</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-        for _, row in horse_list.iterrows():
-            st.markdown(f"- **{row['horse_name']}** (`{row['horse_id']}`)")
 
         return  # don't show the search again
 
