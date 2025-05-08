@@ -31,7 +31,7 @@ def main():
         }
     
         .logo-header img {
-            height: 40px;
+            height: 100px;
         }
     
         .main .block-container {
