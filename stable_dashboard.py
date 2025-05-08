@@ -17,7 +17,7 @@ def main():
     st.markdown(
         """
         <div style="text-align: left; margin-top: -1rem; margin-bottom: 1rem;">
-            <img src="https://raw.githubusercontent.com/Colton12-DDSd/zedalytics/main/ZEDalytics_logo_long.png" alt="ZEDalytics Logo" style="height: 45px;">
+            <img src="https://raw.githubusercontent.com/Colton12-DDSd/zedalytics/main/ZEDalytics_logo_long.png" alt="ZEDalytics Logo" style="height: 100px;">
         </div>
         """,
         unsafe_allow_html=True
