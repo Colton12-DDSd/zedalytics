@@ -70,3 +70,49 @@ def stream_filtered_race_data(horse_query):
     except Exception as e:
         print(f"❌ stream_filtered_race_data() failed: {e}")
         return pd.DataFrame(), []
+        
+def load_recent_finish_times(limit=500):
+    """
+    Streams finish times from the most recent race files (up to `limit` entries).
+    Prioritizes more recent files based on filename timestamps.
+
+    Returns:
+        List[float]: Finish times from recent races.
+    """
+    import requests
+    from io import StringIO
+    import pandas as pd
+
+    owner = "myblood-tempest"
+    repo = "zed-champions-race-data"
+    api_url = f"https://api.github.com/repos/{owner}/{repo}/contents"
+
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        files = response.json()
+
+        csv_files = sorted(
+            [file for file in files if file["name"].endswith(".csv") and "race_data" in file["name"]],
+            key=lambda x: x["name"],
+            reverse=True  # most recent files first
+        )
+
+        finish_times = []
+
+        for file in csv_files:
+            file_response = requests.get(file["download_url"])
+            file_response.raise_for_status()
+            df = pd.read_csv(StringIO(file_response.text))
+
+            if "finish_time" in df.columns:
+                finish_times.extend(df["finish_time"].dropna().tolist())
+
+            if len(finish_times) >= limit:
+                break
+
+        return finish_times[:limit]
+
+    except Exception as e:
+        print(f"❌ Failed to load recent finish times: {e}")
+        return []
