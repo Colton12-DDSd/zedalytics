@@ -72,13 +72,6 @@ def stream_filtered_race_data(horse_query):
         return pd.DataFrame(), []
         
 def load_recent_finish_times(limit=500):
-    """
-    Streams finish times from the most recent race files (up to `limit` entries).
-    Prioritizes more recent files based on filename timestamps.
-
-    Returns:
-        List[float]: Finish times from recent races.
-    """
     import requests
     from io import StringIO
     import pandas as pd
@@ -95,7 +88,7 @@ def load_recent_finish_times(limit=500):
         csv_files = sorted(
             [file for file in files if file["name"].endswith(".csv") and "race_data" in file["name"]],
             key=lambda x: x["name"],
-            reverse=True  # most recent files first
+            reverse=True  # recent first
         )
 
         finish_times = []
@@ -103,16 +96,16 @@ def load_recent_finish_times(limit=500):
         for file in csv_files:
             file_response = requests.get(file["download_url"])
             file_response.raise_for_status()
-            df = pd.read_csv(StringIO(file_response.text))
 
-            if "finish_time" in df.columns:
-                finish_times.extend(df["finish_time"].dropna().tolist())
-
-            if len(finish_times) >= limit:
-                break
+            # Efficient column load with chunking
+            for chunk in pd.read_csv(StringIO(file_response.text), usecols=["finish_time"], chunksize=5000):
+                finish_times.extend(chunk["finish_time"].dropna().tolist())
+                if len(finish_times) >= limit:
+                    return finish_times[:limit]
 
         return finish_times[:limit]
 
     except Exception as e:
         print(f"❌ Failed to load recent finish times: {e}")
         return []
+
