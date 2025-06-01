@@ -12,6 +12,7 @@ st.set_page_config(page_title="Zedalytics", layout="wide")
 st.title("Zedalytics")
 
 st.markdown("""
+> UNDER MAINTENANCE!!!
 > ⚠️ **Data Disclaimer**  
 > Race data is streamed from a public GitHub source and may not reflect the full history of ZED Champions.  
 > This tool is unofficial and for analytical purposes only.
