@@ -5,14 +5,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 plt.style.use("dark_background")
-# URL to the live race results data
-CSV_URL = 'https://raw.githubusercontent.com/myblood-tempest/zed-champions-race-data/main/race_results.csv'
+from github_data_loader import load_combined_race_data
 
 @st.cache_data(ttl=600)
 def load_data():
-    df = pd.read_csv(CSV_URL)
-    df['race_date'] = pd.to_datetime(df['race_date'], errors='coerce')
-    return df
+    return load_combined_race_data()
 
 def show_horse_dashboard(horse_df, full_df):
     horse_df = horse_df.copy()
