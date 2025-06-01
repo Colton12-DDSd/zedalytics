@@ -2,6 +2,8 @@ import streamlit as st
 from PIL import Image
 from utils.github_data_loader import stream_filtered_race_data
 from utils.horse_stats import calculate_basic_stats
+from utils.github_data_loader import load_recent_finish_times
+
 
 st.set_page_config(page_title="Zedalytics", layout="wide")
 
@@ -46,3 +48,21 @@ col3.metric("Top 3 %", f"{stats['top3_pct']:.2f}%")
 col4, col5 = st.columns(2)
 col4.metric("Total Earnings", f"{int(stats['earnings']):,} ZED")
 col5.metric("Profit / Loss", f"{int(stats['profit']):,} ZED")
+
+# --- Add Distribution Chart ---
+import matplotlib.pyplot as plt
+
+st.subheader("⏱️ Finish Time Distribution vs. Field")
+
+recent_times = load_recent_finish_times(500)
+if recent_times:
+    fig, ax = plt.subplots(figsize=(6, 3))
+    ax.hist(recent_times, bins=30, alpha=0.5, label="Recent Field", color='gray')
+    ax.axvline(horse_df['finish_time'].mean(), color='cyan', linestyle='--', linewidth=2, label="Avg")
+    ax.axvline(horse_df['finish_time'].min(), color='green', linestyle='--', linewidth=2, label="Fastest")
+    ax.axvline(horse_df['finish_time'].max(), color='red', linestyle=':', linewidth=2, label="Slowest")
+    ax.legend()
+    st.pyplot(fig)
+else:
+    st.info("Couldn't load recent finish time data.")
+
