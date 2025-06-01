@@ -2,7 +2,7 @@ import pandas as pd
 import requests
 from io import StringIO
 
-def load_all_race_data():
+def load_combined_race_data():
     """
     Loads and concatenates all race data CSV files from the 'data_chunks' folder
     of the 'zed-champions-race-data' GitHub repository.
