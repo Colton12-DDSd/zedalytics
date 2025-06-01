@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 plt.style.use("dark_background")
-from github_data_loader import load_combined_race_data
+from utils.github_data_loader import load_combined_race_data
 
 @st.cache_data(ttl=600)
 def load_data():
