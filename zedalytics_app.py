@@ -1,12 +1,7 @@
-# zedalytics_app.py
-
 import streamlit as st
 from PIL import Image
-from utils.github_data_loader import stream_filtered_race_data  # ✅ your optimized loader
-
-# Optional: Show logo if available
-# logo = Image.open("logo.png")
-# st.image(logo, width=150)
+from utils.github_data_loader import stream_filtered_race_data
+from utils.horse_stats import calculate_basic_stats  # <-- NEW import
 
 st.set_page_config(page_title="Zedalytics", layout="wide")
 st.title("Zedalytics")
@@ -38,5 +33,15 @@ if horse_df.empty:
 st.success(f"✅ Found {len(horse_df)} races for `{user_input}`.")
 st.dataframe(horse_df.head(10))
 
-# --- Optional: Show summary stats later
-# st.markdown("### Performance Summary Coming Soon...")
+# --- Show Stats ---
+st.subheader("📊 Performance Summary")
+stats = calculate_basic_stats(horse_df)
+
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Races", stats["total_races"])
+col2.metric("Win %", f"{stats['win_pct']:.2f}%")
+col3.metric("Top 3 %", f"{stats['top3_pct']:.2f}%")
+
+col4, col5 = st.columns(2)
+col4.metric("Total Earnings", f"{int(stats['earnings']):,} ZED")
+col5.metric("Profit / Loss", f"{int(stats['profit']):,} ZED")
