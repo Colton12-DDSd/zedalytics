@@ -3,21 +3,21 @@ from PIL import Image
 from utils.github_data_loader import stream_filtered_race_data
 from utils.horse_stats import calculate_basic_stats
 
-# --- Page Setup ---
 st.set_page_config(page_title="Zedalytics", layout="wide")
 
-# --- Logo (scaled to ~25% width) ---
+# --- Logo ---
 logo = Image.open("ZEDalytics_logo_long.png")
-st.image(logo, width=300)  # Adjust pixel width to fit ~25% of a typical desktop width
+st.image(logo, width=300)  # ~25% of common wide layouts
 
-# --- Title & Disclaimer ---
+st.title("Zedalytics")
+
 st.markdown("""
 > ⚠️ **Data Disclaimer**  
 > Race data is streamed from a public GitHub source and may not reflect the full history of ZED Champions.  
 > This tool is unofficial and for analytical purposes only.
 """)
 
-# --- Search Bar ---
+# --- Search UI ---
 st.subheader("🔎 Search for a Horse")
 user_input = st.text_input("Enter Horse Name or ID:")
 
@@ -25,16 +25,19 @@ if not user_input:
     st.info("Enter a horse name or ID above to begin.")
     st.stop()
 
-# --- Search & Load ---
+# --- Stream and Filter Data ---
 with st.spinner("Searching races..."):
     horse_df, all_finish_times = stream_filtered_race_data(user_input)
 
+# --- Handle No Results ---
 if horse_df.empty:
     st.warning("No races found for that horse.")
     st.stop()
 
-# --- Stats ---
+# --- Stats Summary ---
+st.success(f"✅ Found {len(horse_df)} races for `{user_input}`.")
 st.subheader("📊 Performance Summary")
+
 stats = calculate_basic_stats(horse_df)
 
 col1, col2, col3 = st.columns(3)
