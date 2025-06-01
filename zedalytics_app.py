@@ -54,7 +54,7 @@ import matplotlib.pyplot as plt
 
 st.subheader("⏱️ Finish Time Distribution vs. Field")
 
-recent_times = load_recent_finish_times(500)
+recent_times = load_recent_finish_times(2000)
 if recent_times:
     fig, ax = plt.subplots(figsize=(6, 3))
     ax.hist(recent_times, bins=30, alpha=0.5, label="Recent Field", color='gray')
