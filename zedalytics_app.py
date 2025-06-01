@@ -6,9 +6,9 @@ from utils.horse_stats import calculate_basic_stats
 # --- Page Setup ---
 st.set_page_config(page_title="Zedalytics", layout="wide")
 
-# --- Logo ---
+# --- Logo (scaled to ~25% width) ---
 logo = Image.open("ZEDalytics_logo_long.png")
-st.image(logo, use_column_width=True)
+st.image(logo, width=300)  # Adjust pixel width to fit ~25% of a typical desktop width
 
 # --- Title & Disclaimer ---
 st.markdown("""
