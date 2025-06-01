@@ -9,8 +9,6 @@ st.set_page_config(page_title="Zedalytics", layout="wide")
 logo = Image.open("ZEDalytics_logo_long.png")
 st.image(logo, width=300)  # ~25% of common wide layouts
 
-st.title("Zedalytics")
-
 st.markdown("""
 > ⚠️ **Data Disclaimer**  
 > Race data is streamed from a public GitHub source and may not reflect the full history of ZED Champions.  
