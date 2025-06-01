@@ -3,6 +3,7 @@ from PIL import Image
 from utils.github_data_loader import stream_filtered_race_data
 from utils.horse_stats import calculate_basic_stats
 from utils.github_data_loader import load_recent_finish_times
+import matplotlib.pyplot as plt
 
 
 st.set_page_config(page_title="Zedalytics", layout="wide")
@@ -50,11 +51,11 @@ col4.metric("Total Earnings", f"{int(stats['earnings']):,} ZED")
 col5.metric("Profit / Loss", f"{int(stats['profit']):,} ZED")
 
 # --- Add Distribution Chart ---
-import matplotlib.pyplot as plt
+
 
 st.subheader("⏱️ Finish Time Distribution vs. Field")
 
-recent_times = load_recent_finish_times(2000)
+recent_times = load_recent_finish_times(1000)
 if recent_times:
     fig, ax = plt.subplots(figsize=(6, 3))
     ax.hist(recent_times, bins=30, alpha=0.5, label="Recent Field", color='gray')
