@@ -55,7 +55,7 @@ col5.metric("Profit / Loss", f"{int(stats['profit']):,} ZED")
 
 st.subheader("⏱️ Finish Time Distribution vs. Field")
 
-recent_times = load_recent_finish_times(1000)
+recent_times = load_recent_finish_times(2000)
 if recent_times:
     fig, ax = plt.subplots(figsize=(6, 3))
     ax.hist(recent_times, bins=30, alpha=0.5, label="Recent Field", color='gray')
