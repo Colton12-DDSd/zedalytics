@@ -111,8 +111,7 @@ async def main():
                           finishPosition
                           sectionalPositions
                           augments {
-                              id
-                              name
+                              __typename
                             }
                           augmentsTriggered
                           horse {
