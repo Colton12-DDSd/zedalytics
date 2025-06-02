@@ -110,7 +110,10 @@ async def main():
                           points
                           finishPosition
                           sectionalPositions
-                          augments
+                          augments {
+                              id
+                              name
+                            }
                           augmentsTriggered
                           horse {
                             id
