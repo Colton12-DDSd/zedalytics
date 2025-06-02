@@ -89,57 +89,54 @@ async def main():
             "type": "subscribe",
             "payload": {
                 "operationName": "RaceEventSub",
-                "query": """subscription RaceEventSub($where: SimpleEntityEventWhereInput) {
-                      raceEvent(where: $where) {
+                "query": """
+                subscription RaceEventSub($where: SimpleEntityEventWhereInput) {
+                  raceEvent(where: $where) {
+                    id
+                    timestamp
+                    action
+                    entityId
+                    entityTypename
+                    entity {
+                      ... on Race {
                         id
-                        timestamp
-                        action
-                        entityId
-                        entityTypename
-                        entity {
-                          ... on Race {
+                        name
+                        status
+                        startTime
+                        finishTime
+                        racePotsTotal
+                        participants {
+                          gateNumber
+                          earnings
+                          stake
+                          startingPoints
+                          points
+                          finishPosition
+                          sectionalPositions
+                          augments
+                          augmentsTriggered
+                          horse {
                             id
                             name
-                            status
-                            startTime
-                            finishTime
-                            racePotsTotal
-                            participants {
-                              gateNumber
-                              earnings
-                              stake
-                              odds
-                              startingPoints
-                              points
-                              finishPosition
-                              horse {
-                                id
-                                name
-                                bloodline
-                                generation
-                                gender
-                                rating
-                                speed_rating
-                                sprint_rating
-                                endurance_rating
-                                state
-                                userId
-                                user {
-                                  stableName
-                                }
-                              }
-                              cpu_augment
-                              ram_augment
-                              hydraulic_augment
-                              cpu_augment_triggered
-                              ram_augment_triggered
-                              hydraulic_augment_triggered
-                              sectional_positions
+                            bloodline
+                            generation
+                            gender
+                            speedRating
+                            sprintRating
+                            enduranceRating
+                            state
+                            userId
+                            user {
+                              stableName
                             }
                           }
                         }
                       }
-                    }""",
+                    }
+                  }
+                }
+                """
+,
                 "variables": {"where": {"entityTypename": "Race"}}
             }
         }))
@@ -170,10 +167,10 @@ async def main():
                         "bloodline": horse["bloodline"],
                         "generation": horse["generation"],
                         "gender": horse.get("gender", "UNKNOWN"),
-                        "rating": horse.get("rating", 0),
-                        "speed_rating": horse.get("speed_rating", 0),
-                        "sprint_rating": horse.get("sprint_rating", 0),
-                        "endurance_rating": horse.get("endurance_rating", 0),
+                        "rating": 0,  # Deprecated field — not in GraphQL anymore
+                        "speed_rating": horse.get("speedRating", 0),
+                        "sprint_rating": horse.get("sprintRating", 0),
+                        "endurance_rating": horse.get("enduranceRating", 0),
                         "state": horse.get("state", "UNKNOWN")
                     })
 
@@ -181,6 +178,9 @@ async def main():
                         "user_id": user_id,
                         "stable_name": horse.get("user", {}).get("stableName", "")
                     })
+
+                    augments = p.get("augments", [None, None, None])
+                    triggers = p.get("augmentsTriggered", [False, False, False])
 
                     participants.append({
                         "id": str(uuid.uuid4()),
@@ -192,18 +192,19 @@ async def main():
                         "finish_time": race["finishTime"],
                         "earnings": p.get("earnings", 0),
                         "stake": p.get("stake", 0),
-                        "odds": p.get("odds", 0),
+                        "odds": 0,  # No longer available in schema
                         "starting_points": p.get("startingPoints", 0),
                         "ending_points": p.get("points", 0),
                         "points_change": p.get("points", 0) - p.get("startingPoints", 0),
-                        "cpu_augment": p.get("cpu_augment"),
-                        "ram_augment": p.get("ram_augment"),
-                        "hydraulic_augment": p.get("hydraulic_augment"),
-                        "cpu_triggered": p.get("cpu_augment_triggered", False),
-                        "ram_triggered": p.get("ram_augment_triggered", False),
-                        "hydraulic_triggered": p.get("hydraulic_augment_triggered", False),
-                        "sectional_positions": p.get("sectional_positions", [])
+                        "cpu_augment": augments[0],
+                        "ram_augment": augments[1],
+                        "hydraulic_augment": augments[2],
+                        "cpu_triggered": triggers[0],
+                        "ram_triggered": triggers[1],
+                        "hydraulic_triggered": triggers[2],
+                        "sectional_positions": p.get("sectionalPositions", [])
                     })
+
 
                 await insert_race_and_participants(race, participants)
                 print(f"✅ Logged race {race['name']} ({race_id})")
