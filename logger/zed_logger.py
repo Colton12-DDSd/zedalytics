@@ -160,31 +160,38 @@ async def main():
                 for p in race["participants"]:
                     horse = p["horse"]
                     user_id = horse.get("userId", "00000000-0000-0000-0000-000000000000")
-
+                
                     await upsert_horse({
                         "id": horse["id"],
                         "name": horse["name"],
                         "bloodline": horse["bloodline"],
                         "generation": horse["generation"],
                         "gender": horse.get("gender", "UNKNOWN"),
-                        "rating": 0,  # Deprecated field — not in GraphQL anymore
+                        "rating": 0,
                         "speed_rating": horse.get("speedRating", 0),
                         "sprint_rating": horse.get("sprintRating", 0),
                         "endurance_rating": horse.get("enduranceRating", 0),
                         "state": horse.get("state", "UNKNOWN")
                     })
-
+                
                     await upsert_stable({
                         "user_id": user_id,
                         "stable_name": horse.get("user", {}).get("stableName", "")
                     })
-
-                    augments = p.get("augments", [None, None, None])
-                    triggers = p.get("augmentsTriggered", [False, False, False])
-
+                
+                    # Cleanly parse augments and triggers
+                    augments_raw = p.get("augments", [])
+                    augments = [a.get("name") if isinstance(a, dict) else None for a in augments_raw]
+                    augments += [None] * (3 - len(augments))  # Pad if < 3
+                    cpu_augment, ram_augment, hydraulic_augment = augments[:3]
+                
+                    triggers = p.get("augmentsTriggered", [])
+                    triggers += [False] * (3 - len(triggers))  # Pad if < 3
+                    cpu_triggered, ram_triggered, hydraulic_triggered = triggers[:3]
+                
                     participants.append({
                         "id": str(uuid.uuid4()),
-                        "race_id": race_id,
+                        "race_id": race["id"],
                         "horse_id": horse["id"],
                         "user_id": user_id,
                         "gate_number": p.get("gateNumber"),
@@ -192,18 +199,19 @@ async def main():
                         "finish_time": race["finishTime"],
                         "earnings": p.get("earnings", 0),
                         "stake": p.get("stake", 0),
-                        "odds": 0,  # No longer available in schema
+                        "odds": 0,
                         "starting_points": p.get("startingPoints", 0),
                         "ending_points": p.get("points", 0),
                         "points_change": p.get("points", 0) - p.get("startingPoints", 0),
-                        "cpu_augment": augments[0],
-                        "ram_augment": augments[1],
-                        "hydraulic_augment": augments[2],
-                        "cpu_triggered": triggers[0],
-                        "ram_triggered": triggers[1],
-                        "hydraulic_triggered": triggers[2],
+                        "cpu_augment": cpu_augment,
+                        "ram_augment": ram_augment,
+                        "hydraulic_augment": hydraulic_augment,
+                        "cpu_triggered": cpu_triggered,
+                        "ram_triggered": ram_triggered,
+                        "hydraulic_triggered": hydraulic_triggered,
                         "sectional_positions": p.get("sectionalPositions", [])
                     })
+
 
 
                 await insert_race_and_participants(race, participants)
