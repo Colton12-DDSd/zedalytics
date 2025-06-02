@@ -113,7 +113,9 @@ async def main():
                           points
                           finishPosition
                           sectionalPositions
-                          augments
+                          augments {
+                            name
+                          }
                           augmentsTriggered
                           horse {
                             id
@@ -136,6 +138,7 @@ async def main():
                   }
                 }
                 """
+
 ,
                 "variables": {"where": {"entityTypename": "Race"}}
             }
