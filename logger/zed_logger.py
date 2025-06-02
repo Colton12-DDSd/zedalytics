@@ -4,7 +4,7 @@ import json
 import uuid
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql import text
-
+from config import WS_URL, BEARER_TOKEN, SUPABASE_DB_URL
 
 
 # === DB Engine ===
