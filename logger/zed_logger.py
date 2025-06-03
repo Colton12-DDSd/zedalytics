@@ -35,12 +35,8 @@ async def main():
                         participants {
                           gateNumber
                           finishPosition
-                          earnings
-                          stake
                           sectionalPositions
-                          augments {
-                            __typename
-                          }
+                          augments
                           augmentsTriggered
                           horse {
                             id
