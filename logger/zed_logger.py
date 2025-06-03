@@ -68,7 +68,7 @@ async def main():
                 for p in race.get("participants", []):
                     horse = p.get("horse", {})
                     print(f" - 🐎 {horse.get('name')} (Bloodline: {horse.get('bloodline')}) | Gate {p.get('gateNumber')} → Finish {p.get('finishPosition')}")
-                await asyncio.sleep(10)  # ⏱ Wait 10 seconds before listening for the next race
+                await asyncio.sleep(30)  # ⏱ Wait 10 seconds before listening for the next race
 
 
             except Exception as e:
