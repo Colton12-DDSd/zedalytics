@@ -4,6 +4,8 @@ import json
 import uuid
 from config import WS_URL, BEARER_TOKEN
 
+seen_races = set()
+
 async def main():
     async with websockets.connect(WS_URL, subprotocols=["graphql-transport-ws"]) as ws:
         await ws.send(json.dumps({
@@ -63,13 +65,18 @@ async def main():
                 race = race_event.get("entity")
                 if not race or race.get("status") != "FINISHED":
                     continue
-                    
+
+                race_id = race.get("id")
+                if race_id in seen_races:
+                    continue  # Skip already-logged races
+                seen_races.add(race_id)
+
                 print(f"🏁 Race Finished: {race['name']}")
                 for p in race.get("participants", []):
                     horse = p.get("horse", {})
                     print(f" - 🐎 {horse.get('name')} (Bloodline: {horse.get('bloodline')}) | Gate {p.get('gateNumber')} → Finish {p.get('finishPosition')}")
-                await asyncio.sleep(30)  # ⏱ Wait 10 seconds before listening for the next race
 
+                await asyncio.sleep(10)  # Cooldown between races
 
             except Exception as e:
                 print("❌ Error:", e)
