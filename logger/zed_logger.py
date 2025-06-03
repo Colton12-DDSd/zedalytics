@@ -142,9 +142,16 @@ async def main():
             raw = await ws.recv()
             try:
                 data = json.loads(raw)
-                event = data.get("payload", {}).get("data", {}).get("raceEvent")
+                payload = data.get("payload", {})
+                if "errors" in payload or not payload.get("data"):
+                    print("⚠️ Skipping due to payload error or empty data")
+                    print("🔴 Raw:", raw)
+                    continue
+                
+                event = payload["data"].get("raceEvent")
                 if not event or event.get("entity") is None:
                     continue
+
 
                 race = event["entity"]
                 if race.get("status") != "FINISHED" or not race.get("finishTime"):
