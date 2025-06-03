@@ -154,6 +154,8 @@ async def main():
 
 
                 race = event["entity"]
+                print(f"📊 Race status: {race.get('name')} → {race.get('status')}")
+                
                 if race.get("status") != "FINISHED" or not race.get("finishTime"):
                     continue
 
