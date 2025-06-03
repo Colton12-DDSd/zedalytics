@@ -35,8 +35,15 @@ async def main():
                         participants {
                           gateNumber
                           finishPosition
+                          finishTime
                           sectionalPositions
-                          augments
+                          augments {
+                            id
+                            type
+                            slot
+                            rarity
+                            name
+                          }
                           augmentsTriggered
                           horse {
                             id
