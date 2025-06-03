@@ -38,11 +38,7 @@ async def main():
                           finishTime
                           sectionalPositions
                           augments {
-                            id
-                            type
-                            slot
-                            rarity
-                            name
+                            __typename
                           }
                           augmentsTriggered
                           horse {
