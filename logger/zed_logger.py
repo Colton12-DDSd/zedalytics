@@ -32,6 +32,15 @@ async def main():
                         status
                         startTime
                         finishTime
+                        participants {
+                          gateNumber
+                          finishPosition
+                          horse {
+                            id
+                            name
+                            bloodline
+                          }
+                        }
                       }
                     }
                   }
@@ -46,11 +55,20 @@ async def main():
             raw = await ws.recv()
             try:
                 data = json.loads(raw)
-                print("🔵 Raw Event:\n", json.dumps(data, indent=2))
+                race_event = data.get("payload", {}).get("data", {}).get("raceEvent", {})
+                if not race_event:
+                    print("⚠️ Skipping, missing raceEvent")
+                    continue
 
-                race = data.get("payload", {}).get("data", {}).get("raceEvent", {}).get("entity")
-                if race:
-                    print(f"📊 Race status: {race.get('name')} → {race.get('status')}")
+                race = race_event.get("entity")
+                if not race or race.get("status") != "FINISHED":
+                    continue
+
+                print(f"🏁 Race Finished: {race['name']}")
+                for p in race.get("participants", []):
+                    horse = p.get("horse", {})
+                    print(f" - 🐎 {horse.get('name')} (Bloodline: {horse.get('bloodline')}) | Gate {p.get('gateNumber')} → Finish {p.get('finishPosition')}")
+
             except Exception as e:
                 print("❌ Error:", e)
                 print("🔴 Raw:", raw)
