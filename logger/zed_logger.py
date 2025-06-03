@@ -4,8 +4,6 @@ import json
 import uuid
 from config import WS_URL, BEARER_TOKEN
 
-logged_race_ids = set()
-
 async def main():
     async with websockets.connect(WS_URL, subprotocols=["graphql-transport-ws"]) as ws:
         await ws.send(json.dumps({
@@ -37,7 +35,13 @@ async def main():
                         participants {
                           gateNumber
                           finishPosition
-                          finishTime
+                          earnings
+                          stake
+                          sectionalPositions
+                          augments {
+                            __typename
+                          }
+                          augmentsTriggered
                           horse {
                             id
                             name
@@ -54,6 +58,8 @@ async def main():
         }))
         print("📡 Subscribed to RaceEvents")
 
+        seen_race_ids = set()
+
         while True:
             raw = await ws.recv()
             try:
@@ -66,17 +72,35 @@ async def main():
                 if not race or race.get("status") != "FINISHED":
                     continue
 
-                race_id = race.get("id")
-                if race_id in logged_race_ids:
+                race_id = race["id"]
+                if race_id in seen_race_ids:
                     continue
-                logged_race_ids.add(race_id)
+                seen_race_ids.add(race_id)
 
                 print(f"\n🏁 Race Finished: {race['name']}")
                 for p in race.get("participants", []):
                     horse = p.get("horse", {})
-                    print(f" - 🐎 {horse.get('name')} (Bloodline: {horse.get('bloodline')}) | Gate {p.get('gateNumber')} → Finish {p.get('finishPosition')} in {p.get('finishTime')}s")
+                    name = horse.get("name")
+                    bloodline = horse.get("bloodline")
+                    gate = p.get("gateNumber")
+                    pos = p.get("finishPosition")
+                    time = p.get("sectionalPositions", [None])[-1] or "??"
 
-                await asyncio.sleep(10)  # prevent rapid re-processing
+                    augments = [a.get("__typename", "None") for a in p.get("augments", [])]
+                    triggers = p.get("augmentsTriggered", [])
+
+                    # Pad to 3 augments
+                    while len(augments) < 3:
+                        augments.append("None")
+                    while len(triggers) < 3:
+                        triggers.append(False)
+
+                    aug_display = ", ".join([
+                        f"{a}{'✓' if t else '✗'}"
+                        for a, t in zip(augments, triggers)
+                    ])
+
+                    print(f" - 🐎 {name} (Bloodline: {bloodline}) | Gate {gate} → Finish {pos} in {time}s | Augs: {aug_display}")
 
             except Exception as e:
                 print("❌ Error:", e)
