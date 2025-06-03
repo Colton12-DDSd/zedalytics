@@ -4,7 +4,7 @@ import json
 import uuid
 from config import WS_URL, BEARER_TOKEN
 
-seen_races = set()
+logged_race_ids = set()
 
 async def main():
     async with websockets.connect(WS_URL, subprotocols=["graphql-transport-ws"]) as ws:
@@ -37,7 +37,7 @@ async def main():
                         participants {
                           gateNumber
                           finishPosition
-                           finishTime
+                          finishTime
                           horse {
                             id
                             name
@@ -60,7 +60,6 @@ async def main():
                 data = json.loads(raw)
                 race_event = data.get("payload", {}).get("data", {}).get("raceEvent", {})
                 if not race_event:
-                    print("⚠️ Skipping, missing raceEvent")
                     continue
 
                 race = race_event.get("entity")
@@ -68,16 +67,16 @@ async def main():
                     continue
 
                 race_id = race.get("id")
-                if race_id in seen_races:
-                    continue  # Skip already-logged races
-                seen_races.add(race_id)
+                if race_id in logged_race_ids:
+                    continue
+                logged_race_ids.add(race_id)
 
-                print(f"🏁 Race Finished: {race['name']}")
+                print(f"\n🏁 Race Finished: {race['name']}")
                 for p in race.get("participants", []):
                     horse = p.get("horse", {})
-                    print(f" - 🐎 {horse.get('name')} (Bloodline: {horse.get('bloodline')}) | Gate {p.get('gateNumber')} → Finish {p.get('finishPosition')}")
+                    print(f" - 🐎 {horse.get('name')} (Bloodline: {horse.get('bloodline')}) | Gate {p.get('gateNumber')} → Finish {p.get('finishPosition')} in {p.get('finishTime')}s")
 
-                await asyncio.sleep(10)  # Cooldown between races
+                await asyncio.sleep(10)  # prevent rapid re-processing
 
             except Exception as e:
                 print("❌ Error:", e)
