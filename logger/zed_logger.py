@@ -220,4 +220,16 @@ async def main():
                 print("🔴 Raw:", raw)
 
 # === RUN ===
-asyncio.run(main())
+import time
+
+async def run_forever():
+    while True:
+        try:
+            await main()
+        except Exception as e:
+            print(f"❌ Disconnected with error: {e}")
+            print("🔄 Reconnecting in 5 seconds...")
+            time.sleep(5)
+
+asyncio.run(run_forever())
+
