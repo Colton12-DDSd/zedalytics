@@ -37,6 +37,7 @@ async def main():
                         participants {
                           gateNumber
                           finishPosition
+                           finishTime
                           horse {
                             id
                             name
