@@ -28,20 +28,15 @@ async def main():
                         name
                         startTime
                         finishTime
-                        potsTotal
+                        racePotsTotal
                         participants {
                           gateNumber
                           finishPosition
                           finishTime
                           earnings
                           stake
-                          odds
-                          profitLoss
                           startingPoints
-                          pointsChange
-                          endingPoints
                           sectionalPositions
-                          state
                           augments {
                             __typename
                           }
@@ -52,11 +47,10 @@ async def main():
                             bloodline
                             generation
                             gender
-                            rating
                             speedRating
                             sprintRating
                             enduranceRating
-                            owner {
+                            user {
                               id
                               stable {
                                 name
@@ -72,7 +66,7 @@ async def main():
                 "variables": {"where": {"entityTypename": "Race"}}
             }
         }))
-        print("📡 Subscribed to RaceEventSub (detailed mode)")
+        print("📡 Subscribed to RaceEventSub (corrected)")
 
         seen_race_ids = set()
 
@@ -89,8 +83,8 @@ async def main():
 
                 for p in race.get("participants", []):
                     horse = p.get("horse", {})
-                    owner = horse.get("owner", {})
-                    stable = owner.get("stable", {})
+                    user = horse.get("user", {})
+                    stable = user.get("stable", {})
 
                     augments = [a.get("__typename", "None") for a in p.get("augments", [])]
                     triggers = p.get("augmentsTriggered", [])
@@ -104,8 +98,8 @@ async def main():
                         "race_id": race["id"],
                         "race_name": race["name"],
                         "race_date": race["startTime"],
-                        "race_pots_total": race.get("potsTotal"),
-                        "user_id": owner.get("id"),
+                        "race_pots_total": race.get("racePotsTotal"),
+                        "user_id": user.get("id"),
                         "stable_name": stable.get("name"),
                         "gate_number": p.get("gateNumber"),
                         "horse_id": horse.get("id"),
@@ -113,7 +107,6 @@ async def main():
                         "bloodline": horse.get("bloodline"),
                         "generation": horse.get("generation"),
                         "gender": horse.get("gender"),
-                        "rating": horse.get("rating"),
                         "speed_rating": horse.get("speedRating"),
                         "sprint_rating": horse.get("sprintRating"),
                         "endurance_rating": horse.get("enduranceRating"),
@@ -121,19 +114,14 @@ async def main():
                         "finish_time": p.get("finishTime"),
                         "earnings": p.get("earnings"),
                         "stake": p.get("stake"),
-                        "profit_loss": p.get("profitLoss"),
-                        "odds": p.get("odds"),
                         "starting_points": p.get("startingPoints"),
-                        "points_change": p.get("pointsChange"),
-                        "ending_points": p.get("endingPoints"),
+                        "sectional_positions": p.get("sectionalPositions"),
                         "cpu_augment": augments[0],
                         "ram_augment": augments[1],
                         "hydraulic_augment": augments[2],
                         "cpu_augment_triggered": int(triggers[0]),
                         "ram_augment_triggered": int(triggers[1]),
                         "hydraulic_augment_triggered": int(triggers[2]),
-                        "sectional_positions": p.get("sectionalPositions"),
-                        "state": p.get("state"),
                     })
 
             except Exception as e:
