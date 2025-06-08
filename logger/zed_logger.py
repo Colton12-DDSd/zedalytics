@@ -6,7 +6,7 @@ from config import WS_URL, BEARER_TOKEN
 
 async def main():
     async with websockets.connect(WS_URL, subprotocols=["graphql-transport-ws"]) as ws:
-        # Initialize connection
+        # Init connection
         await ws.send(json.dumps({
             "type": "connection_init",
             "payload": {"authorization": BEARER_TOKEN}
@@ -14,7 +14,7 @@ async def main():
         ack = await ws.recv()
         print(f"🟢 Connected: {ack}")
 
-        # Subscribe to RaceEvent with a simple query
+        # Subscribe to RaceEventSub
         op_id = str(uuid.uuid4())
         await ws.send(json.dumps({
             "id": op_id,
@@ -39,16 +39,26 @@ async def main():
                 }
             }
         }))
-        print("📡 Subscribed to RaceEventSub (basic test)")
+        print("📡 Subscribed to RaceEventSub (FINISHED only)")
 
-        # Event loop
+        seen_finished = set()
+
         while True:
             raw = await ws.recv()
             try:
                 data = json.loads(raw)
                 race = data.get("payload", {}).get("data", {}).get("raceEvent", {}).get("entity")
-                if race:
-                    print(f"🔁 Race Update: {race['name']} | Status: {race['status']}")
+                if not race:
+                    continue
+
+                race_id = race["id"]
+                status = race["status"]
+                name = race["name"]
+
+                if status == "FINISHED" and race_id not in seen_finished:
+                    seen_finished.add(race_id)
+                    print(f"🏁 Race Finished: {name} (ID: {race_id})")
+
             except Exception as e:
                 print("❌ Error:", e)
                 print("🔴 Raw:", raw)
