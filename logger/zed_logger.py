@@ -52,9 +52,6 @@ async def main():
                             enduranceRating
                             user {
                               id
-                              stable {
-                                name
-                              }
                             }
                           }
                         }
@@ -84,7 +81,6 @@ async def main():
                 for p in race.get("participants", []):
                     horse = p.get("horse", {})
                     user = horse.get("user", {})
-                    stable = user.get("stable", {})
 
                     augments = [a.get("__typename", "None") for a in p.get("augments", [])]
                     triggers = p.get("augmentsTriggered", [])
@@ -100,7 +96,6 @@ async def main():
                         "race_date": race["startTime"],
                         "race_pots_total": race.get("racePotsTotal"),
                         "user_id": user.get("id"),
-                        "stable_name": stable.get("name"),
                         "gate_number": p.get("gateNumber"),
                         "horse_id": horse.get("id"),
                         "horse_name": horse.get("name"),
