@@ -6,12 +6,15 @@ from config import WS_URL, BEARER_TOKEN
 
 async def main():
     async with websockets.connect(WS_URL, subprotocols=["graphql-transport-ws"]) as ws:
+        # Initialize connection
         await ws.send(json.dumps({
             "type": "connection_init",
             "payload": {"authorization": BEARER_TOKEN}
         }))
-        await ws.recv()
+        ack = await ws.recv()
+        print(f"🟢 Connected: {ack}")
 
+        # Subscribe to RaceEvent with a simple query
         op_id = str(uuid.uuid4())
         await ws.send(json.dumps({
             "id": op_id,
@@ -19,88 +22,33 @@ async def main():
             "payload": {
                 "operationName": "RaceEventSub",
                 "query": """
-                subscription RaceEventSub($where: SimpleEntityEventWhereInput) {
-                  raceEvent(where: $where) {
-                    id
-                    timestamp
-                    action
-                    entityTypename
-                    entity {
-                      ... on Race {
-                        id
-                        name
-                        status
-                        startTime
-                        finishTime
-                        participants {
-                          gateNumber
-                          finishPosition
-                          finishTime
-                          sectionalPositions
-                          augments {
-                            __typename
-                          }
-                          augmentsTriggered
-                          horse {
+                    subscription RaceEventSub($where: SimpleEntityEventWhereInput) {
+                      raceEvent(where: $where) {
+                        entity {
+                          ... on Race {
                             id
                             name
-                            bloodline
+                            status
                           }
                         }
                       }
                     }
-                  }
-                }
                 """,
-                "variables": {"where": {"entityTypename": "Race"}}
+                "variables": {
+                    "where": {"entityTypename": "Race"}
+                }
             }
         }))
-        print("📡 Subscribed to RaceEvents")
+        print("📡 Subscribed to RaceEventSub (basic test)")
 
-        seen_race_ids = set()
-
+        # Event loop
         while True:
             raw = await ws.recv()
             try:
                 data = json.loads(raw)
-                race_event = data.get("payload", {}).get("data", {}).get("raceEvent", {})
-                if not race_event:
-                    continue
-
-                race = race_event.get("entity")
-                if not race or race.get("status") != "FINISHED":
-                    continue
-
-                race_id = race["id"]
-                if race_id in seen_race_ids:
-                    continue
-                seen_race_ids.add(race_id)
-
-                print(f"\n🏁 Race Finished: {race['name']}")
-                for p in race.get("participants", []):
-                    horse = p.get("horse", {})
-                    name = horse.get("name")
-                    bloodline = horse.get("bloodline")
-                    gate = p.get("gateNumber")
-                    pos = p.get("finishPosition")
-                    time = p.get("sectionalPositions", [None])[-1] or "??"
-
-                    augments = [a.get("__typename", "None") for a in p.get("augments", [])]
-                    triggers = p.get("augmentsTriggered", [])
-
-                    # Pad to 3 augments
-                    while len(augments) < 3:
-                        augments.append("None")
-                    while len(triggers) < 3:
-                        triggers.append(False)
-
-                    aug_display = ", ".join([
-                        f"{a}{'✓' if t else '✗'}"
-                        for a, t in zip(augments, triggers)
-                    ])
-
-                    print(f" - 🐎 {name} (Bloodline: {bloodline}) | Gate {gate} → Finish {pos} in {time}s | Augs: {aug_display}")
-
+                race = data.get("payload", {}).get("data", {}).get("raceEvent", {}).get("entity")
+                if race:
+                    print(f"🔁 Race Update: {race['name']} | Status: {race['status']}")
             except Exception as e:
                 print("❌ Error:", e)
                 print("🔴 Raw:", raw)
